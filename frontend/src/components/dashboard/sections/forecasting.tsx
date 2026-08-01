@@ -15,6 +15,8 @@ import {
   TrendingUp,
   TrendingDown,
   Target,
+  Calendar,
+  DollarSign,
   AlertTriangle,
   CheckCircle2,
   ArrowRight,
@@ -30,6 +32,7 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
   Legend,
 } from "recharts";
 

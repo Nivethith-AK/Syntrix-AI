@@ -115,7 +115,7 @@ export function Sidebar({
           );
         })}
 
-        <div className={cn("pt-3 mt-3 border-t border-sidebar-border", collapsed && "px-0")}>
+        <div className={cn("pt-3 mt-3 border-t border-sidebar-border")}>
           <Link
             href="/app/projects"
             className={cn(

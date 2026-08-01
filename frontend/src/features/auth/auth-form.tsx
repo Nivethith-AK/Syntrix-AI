@@ -41,7 +41,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
           password,
         });
         if (signInError) throw signInError;
-        router.push(next);
+        // Always land on the Syntrix dashboard after login.
+        router.push(next.startsWith("/app") ? next : "/app");
         router.refresh();
       } else {
         const { error: signUpError } = await supabase.auth.signUp({

@@ -3,25 +3,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme {
-  --font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
-  --font-display: "Space Grotesk", "IBM Plex Sans", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
-}
-
-/*
-  Default (:root) tokens match Syntrix Phase-1 auth UI.
-  AppShell wraps authenticated pages in .sales-ops-theme for the dashboard palette.
-*/
+/* Auth pages keep a Syntrix teal look; dashboard uses .sales-ops-theme */
 :root {
-  /* Syntrix legacy tokens used by auth / existing product pages */
+  --font-sans: var(--font-sans), "DM Sans", system-ui, sans-serif;
+  --font-mono: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+  --font-display: var(--font-sans);
+
   --color-surface: #121821;
   --color-surface-elevated: #18212d;
   --color-border-strong: #334155;
   --color-accent-dim: #1f9e91;
   --color-danger: #f07178;
 
-  /* Shared / shadcn tokens — Syntrix teal defaults on auth routes */
   --background: #0b0f14;
   --foreground: #e8eef7;
   --card: #121821;
@@ -58,7 +51,6 @@
   --success: #7fd99a;
   --warning: #e6c07b;
 
-  /* Aliases for auth classNames that use var(--color-*) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-border: var(--border);
@@ -118,12 +110,9 @@
   --color-border-strong: oklch(0.32 0.01 260);
 }
 
-.sales-ops-theme body,
-body:has(.sales-ops-theme) {
-  background: oklch(0.09 0.005 260);
-}
-
 @theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -179,7 +168,7 @@ body:has(.sales-ops-theme) {
       radial-gradient(1200px 600px at 10% -10%, rgba(61, 214, 198, 0.12), transparent 55%),
       radial-gradient(900px 500px at 90% 0%, rgba(96, 165, 250, 0.08), transparent 50%),
       linear-gradient(180deg, #0b0f14 0%, #0e141c 45%, #0b0f14 100%);
-    color: #e8eef7;
+    color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }

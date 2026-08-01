@@ -8,6 +8,12 @@ export async function updateSession(request: NextRequest) {
   const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    // Still force visitors to sign-in when env is missing.
+    if (request.nextUrl.pathname === "/" || request.nextUrl.pathname.startsWith("/app")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/sign-in";
+      return NextResponse.redirect(url);
+    }
     return supabaseResponse;
   }
 
@@ -36,22 +42,21 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/sign-up") ||
     path.startsWith("/auth");
 
-  if (!user && path.startsWith("/app")) {
+  // Unauthenticated: site root and /app → sign-in
+  if (!user && (path === "/" || path.startsWith("/app"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/sign-in";
-    url.searchParams.set("next", path + request.nextUrl.search);
+    if (path.startsWith("/app")) {
+      url.searchParams.set("next", path + request.nextUrl.search);
+    }
     return NextResponse.redirect(url);
   }
 
-  if (user && path === "/") {
+  // Authenticated: root or auth pages → dashboard
+  if (user && (path === "/" || (isAuthRoute && !path.startsWith("/auth/callback")))) {
     const url = request.nextUrl.clone();
     url.pathname = "/app";
-    return NextResponse.redirect(url);
-  }
-
-  if (user && isAuthRoute && !path.startsWith("/auth/callback")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/app";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 
