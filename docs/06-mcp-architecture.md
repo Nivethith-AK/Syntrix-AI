@@ -193,7 +193,7 @@ Exception: a thin File MCP helper may locate artifacts in Supabase Storage that 
 
 | Env | File backing | DB MCP | Research | AI provider |
 |-----|--------------|--------|----------|-------------|
-| Local Compose | **Supabase Storage** | Supabase Cloud / local CLI | Mock provider or real API keys | Ollama (primary) |
+| Local Compose | **Supabase Storage** | Supabase Cloud | Mock provider or real API keys | Ollama (primary) |
 | Demo | Supabase Storage | Supabase Cloud | Live search (rate limited) | Ollama and/or OpenAI-compatible |
 | Hardened | Supabase Storage (+ policies) | Supabase + restricted role | Allowlist only | Env-selected adapter |
 

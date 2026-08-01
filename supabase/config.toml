@@ -1,0 +1,16 @@
+# Minimal Supabase CLI config for migrations against a linked cloud project.
+# See README for apply instructions.
+
+project_id = "syntrix-ai"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+major_version = 15
+
+[db.migrations]
+enabled = true
+schema_paths = []

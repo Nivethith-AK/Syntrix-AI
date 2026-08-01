@@ -1,6 +1,6 @@
 # Syntrix AI — Architecture Documentation
 
-**Status:** Architecture design complete · Phase 0 technical decisions **approved** · **Implementation has not started** and awaits explicit Phase 1 kickoff.
+**Status:** Architecture design complete · Phase 0 technical decisions **locked** · **Phase 1 platform foundation implemented**. Phase 2+ awaits explicit kickoff.
 
 Syntrix AI is an autonomous AI data intelligence platform that behaves like a virtual team of data scientists, ML engineers, researchers, and business analysts. Users upload datasets or connect sources; the system understands data, cleans/prepares it, discovers insights, runs statistical analysis, builds models, compares experiments, explains predictions, generates reports (Markdown + PDF), and recommends improvements—organized under **Projects → Experiment Workspaces**.
 
@@ -21,20 +21,22 @@ Supporting design artifacts:
 
 - Root pointer: [`../ARCHITECTURE.md`](../ARCHITECTURE.md)
 - SQL design sketch: [`../database/schema.sql`](../database/schema.sql)
+- Applied migrations: [`../supabase/migrations/`](../supabase/migrations/)
 
 ## Target stack (summary)
 
 ```
 User → Next.js Frontend → FastAPI Backend → AI Orchestration (LangGraph)
      → Multi-Agent System → ML/Data Engine
-     → Supabase (PostgreSQL + pgvector + Auth + Storage) + Redis (Celery) + MLflow + Ollama
+     → Supabase Cloud (PostgreSQL + pgvector + Auth + Storage) + Redis (Celery) + MLflow + Ollama
 ```
 
 | Layer | Technology |
 |-------|------------|
 | Frontend | Next.js, React, TypeScript, Tailwind, shadcn/ui, Framer Motion, Plotly, Recharts, React Query |
 | Backend | FastAPI, Clean Architecture, Service + Repository patterns |
-| Database / Auth / Storage | Supabase PostgreSQL (+ **pgvector**), Supabase Auth, **Supabase Storage** |
+| Database / Auth / Storage | **Supabase Cloud** PostgreSQL (+ **pgvector**), Auth, **Storage** (no Compose Postgres) |
+| Access control (v1) | **Owner-only** RLS + API checks (`user_id` = auth user); orgs/teams deferred |
 | Domain unit | Project → **Experiment Workspace** → artifacts |
 | Agents | LangGraph (Supervisor + specialist agents); checkpoints in **PostgreSQL** |
 | AI providers | Abstraction layer: primary **Ollama**; optional **OpenAI-compatible** APIs (env-selected) |
@@ -43,15 +45,15 @@ User → Next.js Frontend → FastAPI Backend → AI Orchestration (LangGraph)
 | Jobs | **Redis + Celery** (Redis = broker/queues only) |
 | Vector memory | **PostgreSQL + pgvector** (no ChromaDB) |
 | Reports | **Markdown + PDF** in v1 |
-| Infra | Docker Compose (+ Supabase Cloud for Auth/Postgres/Storage; optional Ollama) |
+| Infra | Docker Compose app services + Redis (+ optional MLflow/Ollama); DB/Auth/Storage on Supabase Cloud |
 
 ## Reading order
 
 1. Start with [00-overview.md](./00-overview.md) for decisions and constraints.
 2. Read [01-system-architecture.md](./01-system-architecture.md) for the big picture.
 3. Dive into schema, API, agents, and MCP as needed for implementation planning.
-4. Use [07-development-roadmap.md](./07-development-roadmap.md) for sequencing after Phase 1 kickoff.
+4. Use [07-development-roadmap.md](./07-development-roadmap.md) for sequencing; Phase 1 is done — Phase 2+ needs kickoff.
 
 ## Governance note
 
-No application source code has been implemented. Empty package directories exist only to clarify structure. **Phase 0 technical decisions are locked.** Phase 1 implementation must not begin until this architecture package receives explicit kickoff approval.
+Phase 0 technology decisions are locked (including Supabase Cloud-only and owner-only access). Phase 1 code lives in the monorepo. Do not start Phase 2+ until explicitly approved.

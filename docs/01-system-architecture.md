@@ -167,6 +167,8 @@ sequenceDiagram
 
 ## 6. Deployment topology (Docker Compose + Supabase Cloud)
 
+> **Locked:** App Postgres/Auth/Storage run on **Supabase Cloud only**. Compose does **not** include a Postgres container for the application database.
+
 ```mermaid
 flowchart LR
   subgraph Browser
