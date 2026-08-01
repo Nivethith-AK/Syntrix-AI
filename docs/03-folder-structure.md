@@ -76,7 +76,7 @@ Syntrix-AI/
 │
 ├── database/
 │   ├── schema.sql               # Design-level DDL sketch
-│   ├── migrations/              # Future Supabase/CLI migrations
+│   ├── migrations/              # Mirrored copies of supabase/migrations (Cloud apply)
 │   └── seeds/                   # Demo seed designs
 │
 ├── docker/
@@ -153,4 +153,4 @@ Rules:
 
 ## 8. What exists today
 
-Empty directory scaffolding with `.gitkeep` files matching the structure above. Implementation files are intentionally absent pending Phase 1 kickoff ([roadmap](./07-development-roadmap.md)).
+Phase 1 foundation is implemented: `frontend/`, `backend/`, `ai-engine/` provider skeleton, `supabase/migrations/`, and `docker/compose/`. Phase 2+ packages (`ml-engine` pipelines, MCP servers, agent graphs) remain stubs pending later kickoff ([roadmap](./07-development-roadmap.md)).

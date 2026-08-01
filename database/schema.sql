@@ -1,7 +1,10 @@
 -- Syntrix AI — Design-level DDL sketch (NOT an applied migration)
--- Target: Supabase PostgreSQL + pgvector
+-- Target: Supabase Cloud PostgreSQL + pgvector
 -- See docs/02-database-schema.md for rationale, RLS, and indexes.
--- Apply only after Phase 1 kickoff via proper migration workflow.
+-- Applied migration: supabase/migrations/20260801000001_phase1_foundation.sql
+--
+-- Locked: Supabase Cloud only for app DB; owner-only RLS (user_id = auth.uid()).
+-- Future orgs: project_members table later — not in v1.
 
 create extension if not exists "pgcrypto";
 create extension if not exists "vector";

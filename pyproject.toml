@@ -1,0 +1,38 @@
+[project]
+name = "syntrix-ai"
+version = "0.1.0"
+description = "Syntrix AI monorepo — platform foundation"
+requires-python = ">=3.11"
+dependencies = [
+  "syntrix-backend",
+  "syntrix-ai-engine",
+  "syntrix-ml-engine",
+]
+
+[tool.uv.workspace]
+members = ["backend", "ai-engine", "ml-engine"]
+
+[tool.uv.sources]
+syntrix-backend = { workspace = true }
+syntrix-ai-engine = { workspace = true }
+syntrix-ml-engine = { workspace = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["backend", "ai-engine", "ml-engine"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "syntrix_ai", "syntrix_ml"]
+
+[dependency-groups]
+dev = [
+  "ruff>=0.9.0",
+  "mypy>=1.14.0",
+  "pytest>=8.3.0",
+  "httpx>=0.28.0",
+]

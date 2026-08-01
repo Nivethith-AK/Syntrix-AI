@@ -1,0 +1,227 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Auth pages keep a Syntrix teal look; dashboard uses .sales-ops-theme */
+:root {
+  --font-sans: var(--font-sans), "DM Sans", system-ui, sans-serif;
+  --font-mono: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+  --font-display: var(--font-sans);
+
+  --color-surface: #121821;
+  --color-surface-elevated: #18212d;
+  --color-border-strong: #334155;
+  --color-accent-dim: #1f9e91;
+  --color-danger: #f07178;
+
+  --background: #0b0f14;
+  --foreground: #e8eef7;
+  --card: #121821;
+  --card-foreground: #e8eef7;
+  --popover: #121821;
+  --popover-foreground: #e8eef7;
+  --primary: #e8eef7;
+  --primary-foreground: #0b0f14;
+  --secondary: #18212d;
+  --secondary-foreground: #e8eef7;
+  --muted: #18212d;
+  --muted-foreground: #93a4b8;
+  --accent: #3dd6c6;
+  --accent-foreground: #041016;
+  --destructive: #f07178;
+  --destructive-foreground: #e8eef7;
+  --border: #243041;
+  --input: #121821;
+  --ring: #3dd6c6;
+  --chart-1: #60a5fa;
+  --chart-2: #3dd6c6;
+  --chart-3: #e6c07b;
+  --chart-4: #f07178;
+  --chart-5: #c084fc;
+  --radius: 0.5rem;
+  --sidebar: #121821;
+  --sidebar-foreground: #e8eef7;
+  --sidebar-primary: #3dd6c6;
+  --sidebar-primary-foreground: #041016;
+  --sidebar-accent: #18212d;
+  --sidebar-accent-foreground: #e8eef7;
+  --sidebar-border: #243041;
+  --sidebar-ring: #3dd6c6;
+  --success: #7fd99a;
+  --warning: #e6c07b;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+}
+
+.sales-ops-theme {
+  --background: oklch(0.09 0.005 260);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.12 0.005 260);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.12 0.005 260);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.95 0 0);
+  --primary-foreground: oklch(0.09 0.005 260);
+  --secondary: oklch(0.18 0.005 260);
+  --secondary-foreground: oklch(0.95 0 0);
+  --muted: oklch(0.18 0.005 260);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.7 0.18 145);
+  --accent-foreground: oklch(0.09 0.005 260);
+  --destructive: oklch(0.65 0.2 25);
+  --destructive-foreground: oklch(0.95 0 0);
+  --border: oklch(0.22 0.005 260);
+  --input: oklch(0.18 0.005 260);
+  --ring: oklch(0.7 0.18 145);
+  --chart-1: oklch(0.7 0.18 220);
+  --chart-2: oklch(0.7 0.18 145);
+  --chart-3: oklch(0.75 0.18 55);
+  --chart-4: oklch(0.65 0.2 25);
+  --chart-5: oklch(0.7 0.15 300);
+  --sidebar: oklch(0.11 0.005 260);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.7 0.18 145);
+  --sidebar-primary-foreground: oklch(0.09 0.005 260);
+  --sidebar-accent: oklch(0.18 0.005 260);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
+  --sidebar-border: oklch(0.22 0.005 260);
+  --sidebar-ring: oklch(0.7 0.18 145);
+  --success: oklch(0.7 0.18 145);
+  --warning: oklch(0.75 0.18 55);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-surface: var(--card);
+  --color-surface-elevated: var(--secondary);
+  --color-danger: var(--destructive);
+  --color-accent-dim: oklch(0.58 0.14 145);
+  --color-border-strong: oklch(0.32 0.01 260);
+}
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(61, 214, 198, 0.12), transparent 55%),
+      radial-gradient(900px 500px at 90% 0%, rgba(96, 165, 250, 0.08), transparent 50%),
+      linear-gradient(180deg, #0b0f14 0%, #0e141c 45%, #0b0f14 100%);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: rgba(61, 214, 198, 0.28);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 420ms ease-out both;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 320ms ease-out both;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}

@@ -48,8 +48,8 @@ sequenceDiagram
 ### Rules
 
 - Unauthenticated: only health, auth callback helpers if any, OpenAPI (optional lock in prod).
-- `401` invalid/expired token; `403` authenticated but not owner/member.
-- Never trust `user_id` from body; always from JWT.
+- `401` invalid/expired token; `403` authenticated but not owner (v1 has no org/team members).
+- Never trust `user_id` from body; always from JWT. **Access control v1 (locked): owner-only.**
 - Service role key used only in workers/backend server context—never shipped to FE.
 
 ## 4. Cross-cutting response patterns

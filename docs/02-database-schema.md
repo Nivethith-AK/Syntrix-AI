@@ -579,7 +579,7 @@ create policy "owner_all" on experiment_workspaces
 
 **Service role:** Celery workers use a server-side Supabase service key (or direct Postgres with RLS bypass) **only** after API has already authorized the job for that `user_id`/`project_id`/`workspace_id`. Workers must still stamp ownership correctly; never accept client-supplied ownership without verification at enqueue time.
 
-**Future orgs:** introduce `project_members (project_id, user_id, role)` and switch policies to membership—schema leaves room via `projects` without hardcoding single-owner forever.
+**Future orgs (deferred — not in v1 migrations):** introduce `project_members (project_id, user_id, role)` and optionally `organizations`; switch RLS from `auth.uid() = user_id` to membership. v1 keeps a single `user_id` owner column on resources (no unused `organization_id` / membership tables). Extension is documented only until a later phase explicitly adds it.
 
 ## 8. Indexing & performance notes
 
