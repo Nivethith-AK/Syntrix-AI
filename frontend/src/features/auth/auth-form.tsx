@@ -15,12 +15,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/app";
+  const envError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    envError === "missing_env"
+      ? "App is missing Supabase env vars. Check frontend/.env.local."
+      : null,
+  );
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

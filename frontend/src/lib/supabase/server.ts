@@ -7,6 +7,12 @@ export async function createClient() {
   const cookieStore = await cookies();
   const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
 
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in frontend/.env.local",
+    );
+  }
+
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {

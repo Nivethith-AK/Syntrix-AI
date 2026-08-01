@@ -1,13 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { DashboardHome } from "@/components/dashboard/dashboard-home";
 import { Header } from "@/components/dashboard/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import type { Section } from "@/components/dashboard/types";
 import { createClient } from "@/lib/supabase/client";
+
+const SECTIONS: Section[] = [
+  "overview",
+  "pipeline",
+  "deals",
+  "customers",
+  "team",
+  "forecasting",
+  "reports",
+  "settings",
+];
+
+function isSection(value: string | null): value is Section {
+  return !!value && (SECTIONS as string[]).includes(value);
+}
 
 function initialsFromEmail(email?: string | null) {
   if (!email) return "SX";
@@ -24,17 +39,24 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<Section>("overview");
+  const searchParams = useSearchParams();
+  const sectionParam = searchParams.get("section");
+  const [activeSection, setActiveSection] = useState<Section>(
+    isSection(sectionParam) ? sectionParam : "overview",
+  );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const isDashboardHome = pathname === "/app";
   const projectsActive = pathname.startsWith("/app/projects");
 
   useEffect(() => {
-    if (isDashboardHome) {
-      setActiveSection((current) => current || "overview");
+    if (!isDashboardHome) return;
+    if (isSection(sectionParam)) {
+      setActiveSection(sectionParam);
+    } else if (!sectionParam) {
+      setActiveSection("overview");
     }
-  }, [isDashboardHome]);
+  }, [isDashboardHome, sectionParam]);
 
   async function signOut() {
     const supabase = createClient();
@@ -45,9 +67,12 @@ export function AppShell({
 
   function handleSectionChange(section: Section) {
     setActiveSection(section);
-    if (!isDashboardHome) {
-      router.push("/app");
+    const params = new URLSearchParams();
+    if (section !== "overview") {
+      params.set("section", section);
     }
+    const qs = params.toString();
+    router.push(qs ? `/app?${qs}` : "/app");
   }
 
   return (
