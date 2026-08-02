@@ -62,14 +62,21 @@ class UserRepository:
         user_id: UUID,
         *,
         display_name: str | None = None,
+        avatar_url: str | None = None,
         preferences: dict | None = None,
+        fields: set[str] | None = None,
     ) -> User | None:
         row = await self._session.get(UserRow, user_id)
         if row is None:
             return None
-        if display_name is not None:
-            row.display_name = display_name
-        if preferences is not None:
+        touched = fields or set()
+        if "display_name" in touched:
+            cleaned = (display_name or "").strip()
+            row.display_name = cleaned or None
+        if "avatar_url" in touched:
+            cleaned_avatar = (avatar_url or "").strip()
+            row.avatar_url = cleaned_avatar or None
+        if "preferences" in touched and preferences is not None:
             row.preferences = preferences
         await self._session.flush()
         await self._session.refresh(row)

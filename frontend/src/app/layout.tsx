@@ -23,8 +23,9 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Syntrix AI",
-  description: "Autonomous AI data intelligence platform",
+  title: "Syntrix AI | Autonomous data intelligence",
+  description:
+    "Upload data, run EDA, train models, explain predictions, and ship Markdown + PDF reports with a virtual AI data team.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -4,17 +4,16 @@ import type { ElementType } from "react";
 import Link from "next/link";
 import {
   LayoutDashboard,
-  GitBranch,
-  Handshake,
-  Users,
-  BarChart3,
+  FolderKanban,
+  Database,
+  FlaskConical,
+  Boxes,
+  Bot,
+  FileText,
+  Settings,
   ChevronLeft,
   ChevronRight,
-  CircleDollarSign,
-  Building2,
-  TrendingUp,
-  Settings,
-  FolderKanban,
+  Sparkles,
   LogOut,
 } from "lucide-react";
 
@@ -26,19 +25,19 @@ interface SidebarProps {
   onSectionChange: (section: Section) => void;
   collapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
-  projectsActive?: boolean;
   email?: string | null;
+  displayName?: string | null;
   onSignOut?: () => void;
 }
 
 const navItems: { id: Section; label: string; icon: ElementType }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "pipeline", label: "Pipeline", icon: GitBranch },
-  { id: "deals", label: "Deals", icon: Handshake },
-  { id: "customers", label: "Customers", icon: Building2 },
-  { id: "team", label: "Team", icon: Users },
-  { id: "forecasting", label: "Forecasting", icon: TrendingUp },
-  { id: "reports", label: "Reports", icon: BarChart3 },
+  { id: "projects", label: "Projects", icon: FolderKanban },
+  { id: "datasets", label: "Datasets", icon: Database },
+  { id: "experiments", label: "Experiments", icon: FlaskConical },
+  { id: "models", label: "Models", icon: Boxes },
+  { id: "agents", label: "Agents", icon: Bot },
+  { id: "reports", label: "Reports", icon: FileText },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -47,8 +46,8 @@ export function Sidebar({
   onSectionChange,
   collapsed,
   onCollapsedChange,
-  projectsActive = false,
   email,
+  displayName,
   onSignOut,
 }: SidebarProps) {
   return (
@@ -60,8 +59,8 @@ export function Sidebar({
     >
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
         <Link href="/app" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-white">
-            <CircleDollarSign className="w-5 h-5 text-accent-foreground" />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-accent/15 ring-1 ring-accent/30">
+            <Sparkles className="w-5 h-5 text-accent" />
           </div>
           <span
             className={cn(
@@ -77,7 +76,7 @@ export function Sidebar({
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = !projectsActive && activeSection === item.id;
+          const isActive = activeSection === item.id;
 
           return (
             <button
@@ -114,44 +113,16 @@ export function Sidebar({
             </button>
           );
         })}
-
-        <div className={cn("pt-3 mt-3 border-t border-sidebar-border", collapsed && "px-0")}>
-          <Link
-            href="/app/projects"
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group relative",
-              projectsActive
-                ? "bg-sidebar-accent text-sidebar-foreground"
-                : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
-            )}
-          >
-            <span
-              className={cn(
-                "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-accent transition-all duration-300",
-                projectsActive ? "opacity-100" : "opacity-0",
-              )}
-            />
-            <FolderKanban
-              className={cn(
-                "w-5 h-5 shrink-0",
-                projectsActive ? "text-accent" : "group-hover:scale-110 transition-transform duration-200",
-              )}
-            />
-            <span
-              className={cn(
-                "whitespace-nowrap transition-all duration-300",
-                collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100",
-              )}
-            >
-              Projects
-            </span>
-          </Link>
-        </div>
       </nav>
 
       <div className="p-3 border-t border-sidebar-border space-y-2">
-        {!collapsed && email ? (
-          <p className="px-3 truncate text-xs text-muted-foreground">{email}</p>
+        {!collapsed && (displayName || email) ? (
+          <div className="px-3 space-y-0.5">
+            {displayName ? (
+              <p className="truncate text-sm font-medium text-sidebar-foreground">{displayName}</p>
+            ) : null}
+            {email ? <p className="truncate text-xs text-muted-foreground">{email}</p> : null}
+          </div>
         ) : null}
         {onSignOut ? (
           <button

@@ -31,13 +31,31 @@ async def get_current_user(
     token = authorization.split(" ", 1)[1].strip()
     auth_user = decode_supabase_jwt(token)
 
-    # Ensure public.users row exists (trigger may lag or email/password path)
+    # Ensure public.users row exists and backfill Google/OAuth profile metadata.
+    meta = auth_user.claims.get("user_metadata")
+    if not isinstance(meta, dict):
+        meta = {}
+    given = str(meta.get("given_name") or "").strip()
+    family = str(meta.get("family_name") or "").strip()
+    composed = f"{given} {family}".strip() or None
+    display_name = (
+        str(meta.get("full_name") or "").strip()
+        or str(meta.get("name") or "").strip()
+        or composed
+        or None
+    )
+    avatar_url = (
+        str(meta.get("avatar_url") or "").strip()
+        or str(meta.get("picture") or "").strip()
+        or None
+    )
+
     user_service = UserService(UserRepository(session))
     await user_service.ensure_user(
         user_id=auth_user.id,
         email=auth_user.email or f"{auth_user.id}@users.local",
-        display_name=None,
-        avatar_url=None,
+        display_name=display_name,
+        avatar_url=avatar_url,
     )
     return auth_user
 

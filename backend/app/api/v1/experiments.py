@@ -6,7 +6,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.api.v1.pagination import pagination_params
 from app.api.v1.schemas import JobAccepted, Paginated
@@ -23,8 +23,16 @@ class ExperimentCreate(BaseModel):
     dataset_version_id: UUID
     name: str = Field(min_length=1, max_length=200)
     task_type: str = Field(pattern="^(classification|regression|clustering)$")
-    target_column: str = Field(min_length=1, max_length=200)
+    target_column: str | None = Field(default=None, max_length=200)
     algorithms: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_target_for_task(self) -> ExperimentCreate:
+        if self.task_type != "clustering" and not (self.target_column or "").strip():
+            raise ValueError("target_column is required for classification and regression")
+        if self.task_type == "clustering":
+            self.target_column = (self.target_column or "").strip() or None
+        return self
 
 
 class ExperimentOut(BaseModel):

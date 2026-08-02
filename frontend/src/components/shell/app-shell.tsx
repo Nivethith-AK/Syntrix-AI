@@ -2,18 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 
 import { DashboardHome } from "@/components/dashboard/dashboard-home";
 import { Header } from "@/components/dashboard/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import type { Section } from "@/components/dashboard/types";
+import { api } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
-
-function initialsFromEmail(email?: string | null) {
-  if (!email) return "SX";
-  const local = email.split("@")[0] ?? "sx";
-  return local.slice(0, 2).toUpperCase();
-}
 
 export function AppShell({
   children,
@@ -27,14 +23,25 @@ export function AppShell({
   const [activeSection, setActiveSection] = useState<Section>("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  const meQuery = useQuery({ queryKey: ["me"], queryFn: api.me });
+
   const isDashboardHome = pathname === "/app";
-  const projectsActive = pathname.startsWith("/app/projects");
+  const isProjectsRoute = pathname.startsWith("/app/projects");
 
   useEffect(() => {
-    if (isDashboardHome) {
+    if (isProjectsRoute) {
+      setActiveSection("projects");
+    } else if (isDashboardHome) {
       setActiveSection((current) => current || "overview");
     }
-  }, [isDashboardHome]);
+  }, [isDashboardHome, isProjectsRoute]);
+
+  useEffect(() => {
+    const prefs = meQuery.data?.preferences;
+    if (prefs?.compact_nav === true) {
+      setSidebarCollapsed(true);
+    }
+  }, [meQuery.data?.preferences]);
 
   async function signOut() {
     const supabase = createClient();
@@ -50,15 +57,18 @@ export function AppShell({
     }
   }
 
+  const profileEmail = meQuery.data?.email || email;
+  const displayName = meQuery.data?.display_name;
+
   return (
-    <div className="sales-ops-theme flex min-h-screen bg-background text-foreground">
+    <div className="syntrix-theme flex min-h-screen bg-background text-foreground">
       <Sidebar
-        activeSection={activeSection}
+        activeSection={isProjectsRoute ? "projects" : activeSection}
         onSectionChange={handleSectionChange}
         collapsed={sidebarCollapsed}
         onCollapsedChange={setSidebarCollapsed}
-        projectsActive={projectsActive}
-        email={email}
+        email={profileEmail}
+        displayName={displayName}
         onSignOut={signOut}
       />
       <div
@@ -67,9 +77,8 @@ export function AppShell({
         }`}
       >
         <Header
-          activeSection={activeSection}
-          titleOverride={projectsActive ? "Projects" : undefined}
-          userInitials={initialsFromEmail(email)}
+          activeSection={isProjectsRoute ? "projects" : activeSection}
+          onOpenSettings={() => handleSectionChange("settings")}
         />
         <main className="flex-1 p-6 overflow-auto">
           {isDashboardHome ? (
@@ -77,7 +86,7 @@ export function AppShell({
               key={activeSection}
               className="animate-in fade-in slide-in-from-bottom-4 duration-500"
             >
-              <DashboardHome activeSection={activeSection} />
+              <DashboardHome activeSection={activeSection} onNavigate={handleSectionChange} />
             </div>
           ) : (
             <div className="animate-in fade-in duration-300">{children}</div>

@@ -31,10 +31,19 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isAuthRoute =
+  const isPublicAuthRoute =
     path.startsWith("/sign-in") ||
     path.startsWith("/sign-up") ||
+    path.startsWith("/forgot-password") ||
     path.startsWith("/auth");
+  const isPasswordUpdate = path.startsWith("/update-password");
+
+  // Marketing home is public; signed-in users go straight to the app.
+  if (path === "/" && user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/app";
+    return NextResponse.redirect(url);
+  }
 
   if (!user && path.startsWith("/app")) {
     const url = request.nextUrl.clone();
@@ -43,7 +52,14 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute && !path.startsWith("/auth/callback")) {
+  if (!user && isPasswordUpdate) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/forgot-password";
+    return NextResponse.redirect(url);
+  }
+
+  // Recovery sessions must stay on update-password; don't bounce them to /app.
+  if (user && isPublicAuthRoute && !path.startsWith("/auth/callback")) {
     const url = request.nextUrl.clone();
     url.pathname = "/app";
     return NextResponse.redirect(url);

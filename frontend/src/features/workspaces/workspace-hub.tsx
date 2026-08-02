@@ -38,6 +38,10 @@ export function WorkspaceHub({
   const [taskType, setTaskType] = useState("classification");
   const [chatId, setChatId] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
+  const [predictJson, setPredictJson] = useState('{"feature": 1}');
+  const [predictResult, setPredictResult] = useState<string | null>(null);
+  const [explainPreview, setExplainPreview] = useState<string | null>(null);
+  const [resumeTarget, setResumeTarget] = useState("");
 
   const workspaceQuery = useQuery({
     queryKey: ["workspace", workspaceId],
@@ -142,8 +146,11 @@ export function WorkspaceHub({
         dataset_version_id: versionId!,
         name: `Train ${taskType}`,
         task_type: taskType,
-        target_column: target,
-        algorithms: ["random_forest", "logistic_regression", "xgboost"],
+        target_column: taskType === "clustering" ? null : target,
+        algorithms:
+          taskType === "clustering"
+            ? ["kmeans"]
+            : ["random_forest", "logistic_regression", "xgboost"],
       }),
     onSuccess: (res) => {
       setPollId(res.job_id);
@@ -151,6 +158,9 @@ export function WorkspaceHub({
     },
     onError: (err: Error) => setError(err.message),
   });
+
+  const canTrain =
+    !!versionId && !train.isPending && (taskType === "clustering" || !!target.trim());
 
   const workflow = useMutation({
     mutationFn: (workflow_type: string) =>
@@ -186,11 +196,39 @@ export function WorkspaceHub({
         id = conv.id;
         setChatId(id);
       }
-      return api.sendMessage(id, chatInput);
+      const result = await api.sendMessage(id, chatInput);
+      return { ...result, conversationId: id };
     },
-    onSuccess: async () => {
+    onSuccess: async (res) => {
       setChatInput("");
-      await qc.invalidateQueries({ queryKey: ["conversation", chatId] });
+      await qc.invalidateQueries({ queryKey: ["conversation", res.conversationId] });
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
+  const resumeMut = useMutation({
+    mutationFn: (runId: string) =>
+      api.resumeWorkflow(runId, {
+        target_column: resumeTarget || target || undefined,
+        task_type: taskType,
+      }),
+    onSuccess: async () => {
+      setError(null);
+      await qc.invalidateQueries({ queryKey: ["agent-runs", workspaceId] });
+      await qc.invalidateQueries({ queryKey: ["agent-activities", workspaceId] });
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
+  const predictMut = useMutation({
+    mutationFn: async (modelId: string) => {
+      const rows = JSON.parse(predictJson) as Record<string, unknown> | Array<Record<string, unknown>>;
+      const payload = Array.isArray(rows) ? rows : [rows];
+      return api.predict(modelId, payload);
+    },
+    onSuccess: (res) => {
+      setPredictResult(JSON.stringify(res.output_json, null, 2));
+      setError(null);
     },
     onError: (err: Error) => setError(err.message),
   });
@@ -424,8 +462,13 @@ export function WorkspaceHub({
             <h2 className="font-[family-name:var(--font-display)] text-lg">Train models</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="space-y-1.5">
-                <Label>Target column</Label>
-                <Input value={target} onChange={(e) => setTarget(e.target.value)} placeholder="label" />
+                <Label>Target column{taskType === "clustering" ? " (optional)" : ""}</Label>
+                <Input
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value)}
+                  placeholder={taskType === "clustering" ? "not required" : "e.g. churned"}
+                  disabled={taskType === "clustering"}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Task</Label>
@@ -440,10 +483,7 @@ export function WorkspaceHub({
                 </select>
               </div>
               <div className="flex items-end">
-                <Button
-                  disabled={!versionId || !target || train.isPending}
-                  onClick={() => train.mutate()}
-                >
+                <Button disabled={!canTrain} onClick={() => train.mutate()}>
                   {train.isPending ? "Starting…" : "Run AutoML train"}
                 </Button>
               </div>
@@ -481,8 +521,9 @@ export function WorkspaceHub({
                     {m.is_champion ? (
                       <span className="text-[var(--color-success)]">champion</span>
                     ) : null}
+                    <span className="text-[var(--color-muted)]"> · {m.status}</span>
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {!m.is_champion && m.status === "ready" ? (
                       <Button
                         size="sm"
@@ -499,16 +540,58 @@ export function WorkspaceHub({
                     <Button
                       size="sm"
                       variant="ghost"
+                      disabled={m.status !== "ready" || predictMut.isPending}
+                      onClick={() => predictMut.mutate(m.id)}
+                    >
+                      Predict
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       onClick={() =>
-                        api.explainModel(m.id).then((r) => setPollId(r.job_id)).catch((e: Error) => setError(e.message))
+                        api
+                          .explainModel(m.id)
+                          .then((r) => setPollId(r.job_id))
+                          .catch((e: Error) => setError(e.message))
                       }
                     >
                       Explain
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        api
+                          .getExplanations(m.id)
+                          .then((r) => setExplainPreview(JSON.stringify(r.explanations, null, 2)))
+                          .catch((e: Error) => setError(e.message))
+                      }
+                    >
+                      View explain
                     </Button>
                   </div>
                 </li>
               ))}
             </ul>
+
+            <div className="mt-4 space-y-2 border-t border-[var(--color-border)] pt-4">
+              <Label>Prediction input (JSON object or array of rows)</Label>
+              <textarea
+                className="min-h-[88px] w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3 py-2 font-mono text-xs"
+                value={predictJson}
+                onChange={(e) => setPredictJson(e.target.value)}
+              />
+              {predictResult ? (
+                <pre className="max-h-48 overflow-auto rounded-md border border-[var(--color-border)] bg-black/20 p-3 text-xs text-[var(--color-accent)]">
+                  {predictResult}
+                </pre>
+              ) : null}
+              {explainPreview ? (
+                <pre className="max-h-48 overflow-auto rounded-md border border-[var(--color-border)] bg-black/20 p-3 text-xs">
+                  {explainPreview}
+                </pre>
+              ) : null}
+            </div>
           </div>
         </section>
       )}
@@ -556,11 +639,30 @@ export function WorkspaceHub({
             <h3 className="mb-2 font-[family-name:var(--font-display)] text-lg">Runs</h3>
             <ul className="divide-y divide-[var(--color-border)] text-sm">
               {(runsQuery.data?.items ?? []).map((r) => (
-                <li key={r.id} className="flex justify-between py-2">
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                   <span>
                     {r.workflow_type} · {r.status}
                   </span>
-                  <span className="text-[var(--color-muted)]">{r.id.slice(0, 8)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[var(--color-muted)]">{r.id.slice(0, 8)}</span>
+                    {r.status === "waiting_human" ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          className="h-8 w-36"
+                          placeholder="target column"
+                          value={resumeTarget}
+                          onChange={(e) => setResumeTarget(e.target.value)}
+                        />
+                        <Button
+                          size="sm"
+                          disabled={resumeMut.isPending || !(resumeTarget || target)}
+                          onClick={() => resumeMut.mutate(r.id)}
+                        >
+                          Resume HITL
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
                 </li>
               ))}
             </ul>

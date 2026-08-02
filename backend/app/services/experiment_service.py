@@ -66,7 +66,7 @@ class ExperimentService:
         dataset_version_id: UUID,
         name: str,
         task_type: str,
-        target_column: str,
+        target_column: str | None,
         algorithms: list[str] | None = None,
     ) -> tuple[ExperimentRow, Any]:
         ws = await self._workspaces.get(workspace_id, user_id)

@@ -114,13 +114,29 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  meta jsonb := coalesce(new.raw_user_meta_data, '{}'::jsonb);
+  resolved_name text;
+  resolved_avatar text;
 begin
+  resolved_name := nullif(trim(coalesce(
+    meta->>'full_name',
+    meta->>'name',
+    nullif(trim(concat_ws(' ', meta->>'given_name', meta->>'family_name')), ''),
+    split_part(coalesce(new.email, ''), '@', 1)
+  )), '');
+
+  resolved_avatar := nullif(trim(coalesce(
+    meta->>'avatar_url',
+    meta->>'picture'
+  )), '');
+
   insert into public.users (id, email, display_name, avatar_url)
   values (
     new.id,
     new.email,
-    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
-    new.raw_user_meta_data->>'avatar_url'
+    resolved_name,
+    resolved_avatar
   )
   on conflict (id) do update
     set email = excluded.email,

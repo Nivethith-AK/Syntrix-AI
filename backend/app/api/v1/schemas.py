@@ -31,8 +31,20 @@ class UserOut(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    display_name: str | None = Field(default=None, min_length=1, max_length=120)
+    display_name: str | None = Field(default=None, max_length=120)
+    avatar_url: str | None = Field(default=None, max_length=1000)
     preferences: dict[str, Any] | None = None
+
+
+class UserStatsOut(BaseModel):
+    projects: int = 0
+    workspaces: int = 0
+    datasets: int = 0
+    dataset_versions: int = 0
+    experiments: int = 0
+    models: int = 0
+    agent_runs: int = 0
+    reports: int = 0
 
 
 class ProjectCreate(BaseModel):

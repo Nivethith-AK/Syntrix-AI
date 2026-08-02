@@ -59,6 +59,22 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   me: () => apiFetch<User>("/api/v1/me"),
+  meStats: () =>
+    apiFetch<{
+      projects: number;
+      workspaces: number;
+      datasets: number;
+      dataset_versions: number;
+      experiments: number;
+      models: number;
+      agent_runs: number;
+      reports: number;
+    }>("/api/v1/me/stats"),
+  updateMe: (body: {
+    display_name?: string | null;
+    avatar_url?: string | null;
+    preferences?: Record<string, unknown>;
+  }) => apiFetch<User>("/api/v1/me", { method: "PATCH", body: JSON.stringify(body) }),
   listProjects: () => apiFetch<Paginated<Project>>("/api/v1/projects"),
   createProject: (body: { name: string; description?: string }) =>
     apiFetch<Project>("/api/v1/projects", { method: "POST", body: JSON.stringify(body) }),
@@ -121,7 +137,7 @@ export const api = {
       dataset_version_id: string;
       name: string;
       task_type: string;
-      target_column: string;
+      target_column?: string | null;
       algorithms?: string[];
     },
   ) =>
@@ -157,7 +173,10 @@ export const api = {
       { method: "POST", body: JSON.stringify(body) },
     ),
   getWorkflow: (runId: string) => apiFetch<AgentRun>(`/api/v1/workflows/${runId}`),
-  resumeWorkflow: (runId: string, body: Record<string, unknown>) =>
+  resumeWorkflow: (
+    runId: string,
+    body: { target_column?: string; task_type?: string; input?: Record<string, unknown> },
+  ) =>
     apiFetch<AgentRun>(`/api/v1/workflows/${runId}/resume`, {
       method: "POST",
       body: JSON.stringify(body),

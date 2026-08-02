@@ -11,7 +11,7 @@
 
 /*
   Default (:root) tokens match Syntrix Phase-1 auth UI.
-  AppShell wraps authenticated pages in .sales-ops-theme for the dashboard palette.
+  AppShell wraps authenticated pages in .syntrix-theme for the dashboard palette.
 */
 :root {
   /* Syntrix legacy tokens used by auth / existing product pages */
@@ -68,41 +68,42 @@
   --color-warning: var(--warning);
 }
 
-.sales-ops-theme {
-  --background: oklch(0.09 0.005 260);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.12 0.005 260);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.12 0.005 260);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.95 0 0);
-  --primary-foreground: oklch(0.09 0.005 260);
-  --secondary: oklch(0.18 0.005 260);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.18 0.005 260);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.7 0.18 145);
-  --accent-foreground: oklch(0.09 0.005 260);
-  --destructive: oklch(0.65 0.2 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.22 0.005 260);
-  --input: oklch(0.18 0.005 260);
-  --ring: oklch(0.7 0.18 145);
-  --chart-1: oklch(0.7 0.18 220);
-  --chart-2: oklch(0.7 0.18 145);
-  --chart-3: oklch(0.75 0.18 55);
-  --chart-4: oklch(0.65 0.2 25);
-  --chart-5: oklch(0.7 0.15 300);
-  --sidebar: oklch(0.11 0.005 260);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.7 0.18 145);
-  --sidebar-primary-foreground: oklch(0.09 0.005 260);
-  --sidebar-accent: oklch(0.18 0.005 260);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.22 0.005 260);
-  --sidebar-ring: oklch(0.7 0.18 145);
-  --success: oklch(0.7 0.18 145);
-  --warning: oklch(0.75 0.18 55);
+.syntrix-theme {
+  /* Keep Syntrix teal brand tokens (aligned with :root auth UI) */
+  --background: #0b0f14;
+  --foreground: #e8eef7;
+  --card: #121821;
+  --card-foreground: #e8eef7;
+  --popover: #121821;
+  --popover-foreground: #e8eef7;
+  --primary: #e8eef7;
+  --primary-foreground: #0b0f14;
+  --secondary: #18212d;
+  --secondary-foreground: #e8eef7;
+  --muted: #18212d;
+  --muted-foreground: #93a4b8;
+  --accent: #3dd6c6;
+  --accent-foreground: #041016;
+  --destructive: #f07178;
+  --destructive-foreground: #e8eef7;
+  --border: #243041;
+  --input: #121821;
+  --ring: #3dd6c6;
+  --chart-1: #60a5fa;
+  --chart-2: #3dd6c6;
+  --chart-3: #e6c07b;
+  --chart-4: #f07178;
+  --chart-5: #c084fc;
+  --sidebar: #121821;
+  --sidebar-foreground: #e8eef7;
+  --sidebar-primary: #3dd6c6;
+  --sidebar-primary-foreground: #041016;
+  --sidebar-accent: #18212d;
+  --sidebar-accent-foreground: #e8eef7;
+  --sidebar-border: #243041;
+  --sidebar-ring: #3dd6c6;
+  --success: #7fd99a;
+  --warning: #e6c07b;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

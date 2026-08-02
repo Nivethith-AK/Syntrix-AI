@@ -1,0 +1,105 @@
+/* Landing-only tokens/animations — scoped so dashboard/auth styles stay unchanged */
+
+.landing-root {
+  /* Base palette - baltic-sea */
+  --color-baltic-sea-50: oklch(97.48% 0.0 301.43);
+  --color-baltic-sea-100: oklch(94.80% 0.01 297.72);
+  --color-baltic-sea-200: oklch(88.34% 0.01 296.33);
+  --color-baltic-sea-300: oklch(47.69% 0.02 291.24);
+  --color-baltic-sea-400: oklch(44.91% 0.04 292.35);
+  --color-baltic-sea-500: oklch(40.99% 0.04 292.76);
+  --color-baltic-sea-600: oklch(34.20% 0.04 293.15);
+  --color-baltic-sea-700: oklch(30.16% 0.04 295.15);
+  --color-baltic-sea-800: oklch(26.32% 0.03 293.63);
+  --color-baltic-sea-900: oklch(17.16% 0.02 294.89);
+  --color-baltic-sea-950: oklch(16% 0.0152 296.75);
+
+  --color-keppel-50: oklch(98.08% 0.01 181.42);
+  --color-keppel-100: oklch(93.79% 0.03 177.17);
+  --color-keppel-200: oklch(87.75% 0.06 177.32);
+  --color-keppel-300: oklch(79.68% 0.09 178.36);
+  --color-keppel-400: oklch(70.64% 0.1 179.4);
+  --color-keppel-500: oklch(67.55% 0.11 179.75);
+  --color-keppel-600: oklch(52.92% 0.08 180.79);
+  --color-keppel-700: oklch(45.58% 0.07 182.55);
+  --color-keppel-800: oklch(39.55% 0.05 182.73);
+  --color-keppel-900: oklch(35.39% 0.04 183.99);
+  --color-keppel-950: oklch(25.12% 0.03 188.72);
+
+  --background: hsl(255, 11.11%, 7.06%);
+  --foreground: var(--color-baltic-sea-100);
+  --card: var(--color-baltic-sea-900);
+  --card-foreground: var(--color-baltic-sea-100);
+  --popover: var(--color-baltic-sea-900);
+  --popover-foreground: var(--color-baltic-sea-100);
+  --primary: var(--color-baltic-sea-100);
+  --primary-foreground: var(--color-baltic-sea-950);
+  --secondary: var(--color-baltic-sea-800);
+  --secondary-foreground: var(--color-baltic-sea-200);
+  --muted: var(--color-baltic-sea-800);
+  --muted-foreground: var(--color-baltic-sea-400);
+  --accent: var(--color-keppel-500);
+  --accent-foreground: var(--color-keppel-950);
+  --border: var(--color-baltic-sea-700);
+  --input: var(--color-baltic-sea-800);
+  --ring: var(--color-keppel-500);
+  --radius: 0.75rem;
+  --bento-shadow: inset 0 -20px 80px -20px #ffffff0f;
+
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.landing-root ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.landing-root ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.landing-root ::-webkit-scrollbar-thumb {
+  background: var(--color-baltic-sea-700);
+  border-radius: 4px;
+}
+
+.landing-root ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-baltic-sea-600);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-10px) translateX(5px);
+  }
+  50% {
+    transform: translateY(-5px) translateX(-5px);
+  }
+  75% {
+    transform: translateY(-15px) translateX(3px);
+  }
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scroll-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
