@@ -2,11 +2,17 @@
 
 This file is a pointer to the full architecture package.
 
-**Implementation has not started.** Phase 0 technical decisions are approved. Coding begins only after explicit Phase 1 kickoff approval.
+**Phase 0 decisions are locked. Phase 1 platform foundation is implemented.** Phase 2+ awaits explicit kickoff.
+
+Locked platform constraints relevant to local setup:
+
+- **Database / Auth / Storage:** Supabase Cloud only (no app Postgres in Docker Compose)
+- **Access control v1:** owner-only RLS + API authZ (`user_id` = authenticated user)
 
 ## Start here
 
-→ **[docs/README.md](./docs/README.md)** — documentation index
+→ **[docs/README.md](./docs/README.md)** — documentation index  
+→ **[README.md](./README.md)** — Phase 1 setup / run instructions
 
 ## Document map
 
@@ -21,4 +27,5 @@ This file is a pointer to the full architecture package.
 | [docs/06-mcp-architecture.md](./docs/06-mcp-architecture.md) | MCP tools & security |
 | [docs/07-development-roadmap.md](./docs/07-development-roadmap.md) | Phased delivery |
 
-Design DDL sketch: [database/schema.sql](./database/schema.sql)
+Design DDL sketch: [database/schema.sql](./database/schema.sql)  
+Applied migrations: [supabase/migrations/](./supabase/migrations/)

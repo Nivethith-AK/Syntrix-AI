@@ -83,7 +83,7 @@ flowchart TB
 
 ## 4. Major technology decisions
 
-> **Status:** The decisions below are **approved** (Phase 0 locked). Implementation still awaits explicit Phase 1 kickoff.
+> **Status:** The decisions below are **approved and locked** (Phase 0). Phase 1 platform foundation is implemented against these decisions.
 
 ### 4.1 `ai-engine` vs `ml-engine`
 
@@ -157,30 +157,37 @@ Agents and graphs depend only on the abstraction (`ChatModel` / `EmbeddingModel`
 
 **Decision (approved):** Report generation supports **both Markdown and PDF** in v1 scope (not Markdown-only first). Storage holds both formats (or PDF derived from Markdown) under Supabase Storage; API exposes download for each.
 
-### 4.9 Supabase Cloud vs local Postgres in Docker
+### 4.9 Development database: Supabase Cloud only
 
 | Environment | Postgres / Auth / Storage | Compose services |
 |-------------|---------------------------|------------------|
-| **Local / demo** | Supabase Cloud (preferred) *or* local Supabase CLI | App services + Redis (Celery) + MLflow + Ollama (optional) |
-| **Docker Compose** | Redis, MLflow, API, workers, frontend; optional Ollama | Heavy stateful DB/Auth/Storage stay on Supabase unless offline-only mode |
-| **Offline fallback** | `postgres` + stub auth only for emergency | Documented as optional; not default |
+| **Local / demo** | **Supabase Cloud only** (required primary path) | App services + Redis (Celery) + MLflow + Ollama (optional) |
+| **Docker Compose** | Redis, MLflow, API, workers, frontend; optional Ollama | **No Postgres container** for the app DB; Auth/Postgres/Storage stay on Supabase Cloud |
 
-**Decision (approved):** Default to **Supabase Cloud** for PostgreSQL (+ pgvector), Auth, and Storage. Compose runs app services + Redis (Celery broker) + MLflow (+ optional Ollama). No ChromaDB container.
+**Decision (approved / locked):** Developers and demos use a **Supabase Cloud** project for PostgreSQL (+ pgvector), Auth, and Storage. Migrations apply to that remote project (SQL Editor or `supabase db push` against a linked remote). Local Supabase CLI / local Postgres is **not** the primary or required path. Compose must **not** run a Postgres container for the application database. No ChromaDB container.
 
-### 4.10 Where Celery workers live
+### 4.10 Access control v1: owner-only
+
+**Decision (approved / locked):** v1 authorization is **owner-only**.
+
+- RLS and API authZ: resource `user_id` (owner) must equal the authenticated Supabase `auth.uid()` / JWT subject.
+- No org/team membership APIs or `project_members` table in v1.
+- **Future extension:** add `project_members (project_id, user_id, role)` (and optionally `organizations`) later; switch RLS from `user_id = auth.uid()` to membership checks. Schema comments and docs record this extension point; do not implement membership tables prematurely.
+
+### 4.11 Where Celery workers live
 
 - **Process:** Dedicated `worker` containers (`docker/workers`) sharing the Python workspace packages (`backend`, `ai-engine`, `ml-engine`, `mcp` clients).
 - **Queues:** `default`, `ml_train`, `reports`, `agents` for isolation and priority.
 - **API role:** Enqueue only; never run long training on the request thread.
 - **Why not nest workers inside FastAPI:** Avoids Gunicorn/Uvicorn process coupling and enables horizontal scale of CPU-heavy ML jobs.
 
-### 4.11 Streaming model
+### 4.12 Streaming model
 
 - **SSE** from FastAPI for agent step updates and job progress (simpler through proxies than raw WebSockets for one-way streams).
 - **WebSocket** optional later for bidirectional chat typing indicators / cancel—not required for v1.
 - **Polling** (`GET /jobs/{id}`) as universal fallback.
 
-### 4.12 Frontend UX posture
+### 4.13 Frontend UX posture
 
 Premium **dark enterprise** UI: dense but calm analytics surfaces, workspace-centric navigation, agent activity timeline, Plotly/Recharts for charts, Framer Motion for purposeful transitions (run start, agent handoff, insight reveal)—not decorative noise.
 
@@ -188,17 +195,19 @@ Premium **dark enterprise** UI: dense but calm analytics surfaces, workspace-cen
 
 - Secrets only via environment variables / secret managers; never committed.
 - Supabase JWT validation on every protected API route.
-- Resource ownership checks at service layer **and** RLS on Postgres (including embedding/memory rows).
+- Resource ownership checks at service layer **and** RLS on Postgres (including embedding/memory rows) — **owner-only** in v1 (`user_id = auth.uid()`).
 - Upload limits, MIME/extension allowlists, virus-scan hook point (ClamAV optional), path traversal prevention.
 - MCP tools run with scoped credentials and sandbox paths per project/workspace; File MCP backs onto Supabase Storage.
 - Rate limiting at API edge; CORS locked to frontend origin(s).
 
-## 6. Remaining open decisions (non-blocking defaults preferred)
+## 6. Open decisions
 
-Phase 0 technology decisions in §4 are **approved**. Only the following remain open; they may be deferred with documented defaults at Phase 1 kickoff:
+**None remaining for Phase 0 / Phase 1 platform foundation.** All items previously listed here are locked:
 
-1. **Local Supabase CLI** vs cloud-only for developer onboarding (default: cloud project + migrations).
-2. **Multi-tenancy depth:** single-user portfolio accounts vs org/team roles in schema v1 (default: owner-only RLS; `project_members` later).
+| Topic | Locked decision |
+|-------|-----------------|
+| Dev database | Supabase Cloud only (§4.9) — no Compose Postgres |
+| Access control v1 | Owner-only RLS + API authZ (§4.10); orgs/teams deferred |
 
 ## 7. Related documents
 
