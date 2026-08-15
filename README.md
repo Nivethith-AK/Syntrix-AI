@@ -70,7 +70,7 @@ docker run --name syntrix-redis -p 6379:6379 -d redis:7-alpine
 
 ```bash
 uv sync
-uv run --package syntrix-backend uvicorn app.main:app --reload --app-dir backend --host 0.0.0.0 --port 8000
+uv run --package syntrix-backend uvicorn app.main:app --reload --app-dir backend --host localhost --port 8000
 ```
 
 **Celery worker**

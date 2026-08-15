@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     app_env: Literal["development", "staging", "production"] = "development"
     app_name: str = "Syntrix AI"
-    api_host: str = "0.0.0.0"
+    api_host: str = "localhost"
     api_port: int = 8000
     log_level: str = "INFO"
 
