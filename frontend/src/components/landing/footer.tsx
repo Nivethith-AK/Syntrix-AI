@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Cube, GithubLogo, TwitterLogo, DiscordLogo } from "@phosphor-icons/react/dist/ssr"
 
 export function Footer() {
@@ -7,12 +8,12 @@ export function Footer() {
         <div className="flex flex-col gap-12 lg:flex-row lg:justify-between">
           {/* Brand column */}
           <div className="lg:max-w-xs">
-            <a href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-baltic-sea-800)]">
                 <Cube weight="fill" className="h-5 w-5 text-[var(--color-baltic-sea-400)]" />
               </div>
               <span className="text-xl font-semibold text-[var(--color-baltic-sea-300)]">Syntrix AI</span>
-            </a>
+            </Link>
             <p className="mt-4 text-sm text-[var(--color-baltic-sea-500)]">
               Autonomous AI data intelligence — EDA, training, explanations, and reports in one platform.
             </p>
@@ -73,20 +74,20 @@ export function Footer() {
               <h4 className="text-sm font-medium text-[var(--color-baltic-sea-200)]">Developers</h4>
               <ul className="mt-4 space-y-3">
                 <li>
-                  <a
+                  <Link
                     href="/sign-in"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
                     Sign in
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="/sign-up"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
                     Create account
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a
@@ -131,28 +132,28 @@ export function Footer() {
               <h4 className="text-sm font-medium text-[var(--color-baltic-sea-200)]">Account</h4>
               <ul className="mt-4 space-y-3">
                 <li>
-                  <a
+                  <Link
                     href="/sign-in"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
                     Sign in
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="/forgot-password"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
                     Reset password
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="/app"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
                     Dashboard
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
