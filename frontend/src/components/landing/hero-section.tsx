@@ -361,7 +361,7 @@ export function HeroSection() {
                               {"{"} Agent {"}"}{" "}
                             </span>
                             <span className="text-[var(--color-baltic-sea-500)]">from</span>
-                            <span className="text-[var(--color-keppel-400)]"> '@anchor/sdk'</span>
+                           <span className="text-[var(--color-keppel-400)]"> &apos;@anchor/sdk&apos;</span>
                           </span>
                         ) : line.startsWith("const") ? (
                           <span>
@@ -377,7 +377,7 @@ export function HeroSection() {
                             <span className="text-[var(--color-baltic-sea-300)]"> agent.</span>
                             <span className="text-[var(--color-keppel-400)]">run</span>
                             <span className="text-[var(--color-baltic-sea-300)]">(</span>
-                            <span className="text-[var(--color-keppel-400)]">'Analyze the codebase'</span>
+                            <span className="text-[var(--color-keppel-400)]">&apos;Analyze the codebase&apos;</span>
                             <span className="text-[var(--color-baltic-sea-300)]">)</span>
                           </span>
                         ) : line.includes(":") ? (

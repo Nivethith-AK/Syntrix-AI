@@ -3,7 +3,14 @@
 import { useEffect, useRef, useState } from "react"
 import { Check, X, Minus } from "@phosphor-icons/react/dist/ssr"
 
-const FEATURES = [
+type FeatureValue = boolean | "partial";
+
+const FEATURES: Array<{
+  name: string;
+  anchor: boolean;
+  kubernetes: FeatureValue;
+  lambda: FeatureValue;
+}> = [
   { name: "End-to-end AI data loop", anchor: true, kubernetes: false, lambda: "partial" },
   { name: "Model training + experiments", anchor: true, kubernetes: true, lambda: false },
   { name: "Guided project workspaces", anchor: true, kubernetes: false, lambda: "partial" },
@@ -12,9 +19,9 @@ const FEATURES = [
   { name: "Markdown + PDF reports", anchor: true, kubernetes: false, lambda: false },
   { name: "Markdown + PDF reports", anchor: true, kubernetes: false, lambda: false },
   { name: "Supabase-backed auth & storage", anchor: true, kubernetes: "partial", lambda: true },
-]
+];
 
-function FeatureCell({ value, isVisible, delay }: { value: boolean | "partial"; isVisible: boolean; delay: number }) {
+function FeatureCell({ value, isVisible, delay }: { value: FeatureValue; isVisible: boolean; delay: number }) {
   const baseClasses = `transition-all duration-500 ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-0"}`
 
   if (value === true) {

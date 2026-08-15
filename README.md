@@ -90,6 +90,23 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### Deploy to Vercel (frontend only)
+
+This app is structured so the Next.js frontend can be hosted on Vercel while the FastAPI backend remains a separate service.
+
+1. In the Vercel dashboard, import the repo and set the project root to `frontend`.
+2. Add the following environment variables in Vercel:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_API_URL=https://your-fastapi-backend.example.com
+```
+
+You can copy the template from `frontend/.env.vercel.example`.
+3. Keep `npm install` and `npm run build` as the install/build commands. The repo already includes `frontend/vercel.json` for the Next.js app.
+4. Deploy the project. The frontend will render at the Vercel URL; the API calls will go to `NEXT_PUBLIC_API_URL`.
+
 ### Docker Compose (optional)
 
 ```bash
