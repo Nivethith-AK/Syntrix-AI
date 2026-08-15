@@ -61,10 +61,10 @@ export function Footer() {
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="#faq"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
-                    Changelog
+                    FAQ
                   </a>
                 </li>
               </ul>
@@ -74,26 +74,26 @@ export function Footer() {
               <ul className="mt-4 space-y-3">
                 <li>
                   <a
-                    href="#"
+                    href="/sign-in"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
-                    Documentation
+                    Sign in
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="/sign-up"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
-                    API Reference
+                    Create account
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="#how-it-works"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
-                    Examples
+                    How it works
                   </a>
                 </li>
               </ul>
@@ -103,7 +103,7 @@ export function Footer() {
               <ul className="mt-4 space-y-3">
                 <li>
                   <a
-                    href="#"
+                    href="#product"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
                     About
@@ -111,47 +111,47 @@ export function Footer() {
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="#how-it-works"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
-                    Blog
+                    How it works
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="/sign-up"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
-                    Careers
+                    Get started
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-medium text-[var(--color-baltic-sea-200)]">Legal</h4>
+              <h4 className="text-sm font-medium text-[var(--color-baltic-sea-200)]">Account</h4>
               <ul className="mt-4 space-y-3">
                 <li>
                   <a
-                    href="#"
+                    href="/sign-in"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
-                    Privacy
+                    Sign in
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="/forgot-password"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
-                    Terms
+                    Reset password
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="/app"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
-                    Security
+                    Dashboard
                   </a>
                 </li>
               </ul>

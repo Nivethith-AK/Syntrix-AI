@@ -8,6 +8,7 @@ export function ReportsSection() {
       title="Reports"
       description="Open a workspace to generate Markdown + PDF reports and download them when ready."
       emptyHint="No workspaces yet."
+      tab="reports"
     />
   );
 }

@@ -46,8 +46,6 @@ const GRID_ACTIVATION_MAP: Record<number, number[]> = {
   2: [3, 19, 42, 65, 88, 112, 139, 163, 186, 209, 234, 17, 54, 97, 143, 188, 211, 237],
 }
 
-let animationStarted = false
-
 export function HeroSection() {
   const [typedCommand, setTypedCommand] = useState("")
   const [visibleSteps, setVisibleSteps] = useState<number[]>([])
@@ -63,10 +61,11 @@ export function HeroSection() {
 
   const timeoutsRef = useRef<NodeJS.Timeout[]>([])
   const intervalsRef = useRef<NodeJS.Timeout[]>([])
+  const startedRef = useRef(false)
 
   useEffect(() => {
-    if (animationStarted) return
-    animationStarted = true
+    if (startedRef.current) return
+    startedRef.current = true
 
     const addTimeout = (fn: () => void, delay: number) => {
       const id = setTimeout(fn, delay)
@@ -353,39 +352,22 @@ export function HeroSection() {
                       <div key={i} className="animate-in fade-in slide-in-from-left-1 duration-150">
                         {line === "" ? (
                           <div className="h-5" />
-                        ) : line.startsWith("import") ? (
-                          <span>
-                            <span className="text-[var(--color-baltic-sea-500)]">import</span>
-                            <span className="text-[var(--color-baltic-sea-300)]">
-                              {" "}
-                              {"{"} Agent {"}"}{" "}
-                            </span>
-                            <span className="text-[var(--color-baltic-sea-500)]">from</span>
-                            <span className="text-[var(--color-keppel-400)]"> '@anchor/sdk'</span>
-                          </span>
-                        ) : line.startsWith("const") ? (
-                          <span>
-                            <span className="text-[var(--color-baltic-sea-500)]">const</span>
-                            <span className="text-[var(--color-baltic-sea-300)]"> agent = </span>
-                            <span className="text-[var(--color-baltic-sea-500)]">new</span>
-                            <span className="text-[var(--color-keppel-400)]"> Agent</span>
-                            <span className="text-[var(--color-baltic-sea-300)]">({"{"}</span>
-                          </span>
-                        ) : line.startsWith("await") ? (
+                        ) : line.startsWith("from ") || line.startsWith("import ") ? (
+                          <span className="text-[var(--color-keppel-300)]">{line}</span>
+                        ) : line.startsWith("await ") ? (
                           <span>
                             <span className="text-[var(--color-baltic-sea-500)]">await</span>
-                            <span className="text-[var(--color-baltic-sea-300)]"> agent.</span>
-                            <span className="text-[var(--color-keppel-400)]">run</span>
-                            <span className="text-[var(--color-baltic-sea-300)]">(</span>
-                            <span className="text-[var(--color-keppel-400)]">'Analyze the codebase'</span>
-                            <span className="text-[var(--color-baltic-sea-300)]">)</span>
+                            <span className="text-[var(--color-baltic-sea-300)]">
+                              {line.slice("await".length)}
+                            </span>
                           </span>
                         ) : line.includes(":") ? (
                           <span className="text-[var(--color-baltic-sea-400)]">
-                            {"  "}
-                            {line.split(":")[0].trim()}
+                            {line.split(":")[0]}
                             <span className="text-[var(--color-baltic-sea-500)]">:</span>
-                            <span className="text-[var(--color-keppel-400)]">{line.split(":")[1]}</span>
+                            <span className="text-[var(--color-keppel-400)]">
+                              {line.slice(line.indexOf(":") + 1)}
+                            </span>
                           </span>
                         ) : (
                           <span className="text-[var(--color-baltic-sea-300)]">{line}</span>

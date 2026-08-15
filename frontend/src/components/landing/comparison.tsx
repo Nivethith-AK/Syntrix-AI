@@ -3,13 +3,20 @@
 import { useEffect, useRef, useState } from "react"
 import { Check, X, Minus } from "@phosphor-icons/react/dist/ssr"
 
-const FEATURES = [
+type FeatureValue = boolean | "partial"
+
+const FEATURES: {
+  name: string
+  anchor: FeatureValue
+  kubernetes: FeatureValue
+  lambda: FeatureValue
+}[] = [
   { name: "End-to-end AI data loop", anchor: true, kubernetes: false, lambda: "partial" },
   { name: "Model training + experiments", anchor: true, kubernetes: true, lambda: false },
   { name: "Guided project workspaces", anchor: true, kubernetes: false, lambda: "partial" },
   { name: "SHAP explainability", anchor: true, kubernetes: false, lambda: "partial" },
   { name: "Agent chat + HITL", anchor: true, kubernetes: "partial", lambda: true },
-  { name: "Markdown + PDF reports", anchor: true, kubernetes: false, lambda: false },
+  { name: "Multi-agent orchestration", anchor: true, kubernetes: false, lambda: false },
   { name: "Markdown + PDF reports", anchor: true, kubernetes: false, lambda: false },
   { name: "Supabase-backed auth & storage", anchor: true, kubernetes: "partial", lambda: true },
 ]

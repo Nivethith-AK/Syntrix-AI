@@ -8,6 +8,7 @@ export function ExperimentsSection() {
       title="Experiments"
       description="Open a workspace to run AutoML, compare metrics, and promote a champion model."
       emptyHint="No workspaces yet."
+      tab="experiments"
     />
   );
 }

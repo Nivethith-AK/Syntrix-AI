@@ -8,6 +8,7 @@ export function DatasetsSection() {
       title="Datasets & EDA"
       description="Open a workspace to upload CSV/Parquet/Excel, run profiling, and explore EDA charts."
       emptyHint="No workspaces yet."
+      tab="data"
     />
   );
 }

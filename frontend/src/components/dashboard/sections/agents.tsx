@@ -8,6 +8,7 @@ export function AgentsSection() {
       title="Agents"
       description="Open a workspace to launch LangGraph workflows, resume HITL pauses, and watch the agent timeline."
       emptyHint="No workspaces yet."
+      tab="agents"
     />
   );
 }

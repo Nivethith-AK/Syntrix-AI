@@ -1,72 +1,93 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  AreaChart,
-  Area,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { week: "W1", jobs: 4, experiments: 1 },
-  { week: "W2", jobs: 7, experiments: 2 },
-  { week: "W3", jobs: 5, experiments: 3 },
-  { week: "W4", jobs: 11, experiments: 4 },
-  { week: "W5", jobs: 9, experiments: 3 },
-  { week: "W6", jobs: 14, experiments: 6 },
-  { week: "W7", jobs: 12, experiments: 5 },
-  { week: "W8", jobs: 18, experiments: 8 },
-];
+export type PortfolioStats = {
+  projects: number;
+  workspaces: number;
+  datasets: number;
+  dataset_versions: number;
+  experiments: number;
+  models: number;
+  agent_runs: number;
+  reports: number;
+};
 
-export function ActivityChart() {
+export function ActivityChart({
+  stats,
+  isLoading,
+}: {
+  stats?: PortfolioStats | null;
+  isLoading?: boolean;
+}) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoaded(true), 300);
+    const timer = setTimeout(() => setIsLoaded(true), 200);
     return () => clearTimeout(timer);
   }, []);
+
+  const data = useMemo(
+    () => [
+      { name: "Projects", count: stats?.projects ?? 0 },
+      { name: "Workspaces", count: stats?.workspaces ?? 0 },
+      { name: "Datasets", count: stats?.dataset_versions ?? 0 },
+      { name: "Experiments", count: stats?.experiments ?? 0 },
+      { name: "Models", count: stats?.models ?? 0 },
+      { name: "Agents", count: stats?.agent_runs ?? 0 },
+      { name: "Reports", count: stats?.reports ?? 0 },
+    ],
+    [stats],
+  );
+
+  const total = data.reduce((sum, row) => sum + row.count, 0);
 
   return (
     <div className="bg-card border border-border rounded-xl p-5 h-[380px] animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-base font-semibold text-foreground">Demo activity shape</h3>
+          <h3 className="text-base font-semibold text-foreground">Portfolio mix</h3>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Illustrative job volume — live jobs appear in each workspace
+            {isLoading
+              ? "Loading your counts…"
+              : total === 0
+                ? "Create a project to start filling this chart"
+                : `${total} assets across your Syntrix account`}
           </p>
-        </div>
-        <div className="flex items-center gap-4 text-xs">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-chart-1" />
-            <span className="text-muted-foreground">Jobs</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-chart-2" />
-            <span className="text-muted-foreground">Experiments</span>
-          </div>
         </div>
       </div>
 
-      <div className={`h-[280px] transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
+      <div
+        className={`h-[280px] transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}
+      >
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="jobsGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="expGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
+          <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-            <XAxis dataKey="week" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} axisLine={false} tickLine={false} />
+            <XAxis
+              dataKey="name"
+              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              interval={0}
+              angle={-20}
+              textAnchor="end"
+              height={50}
+            />
+            <YAxis
+              allowDecimals={false}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
+            />
             <Tooltip
               contentStyle={{
                 background: "var(--card)",
@@ -75,9 +96,8 @@ export function ActivityChart() {
                 color: "var(--foreground)",
               }}
             />
-            <Area type="monotone" dataKey="jobs" stroke="var(--chart-1)" fill="url(#jobsGradient)" strokeWidth={2} />
-            <Area type="monotone" dataKey="experiments" stroke="var(--chart-2)" fill="url(#expGradient)" strokeWidth={2} />
-          </AreaChart>
+            <Bar dataKey="count" fill="var(--chart-1)" radius={[6, 6, 0, 0]} />
+          </BarChart>
         </ResponsiveContainer>
       </div>
     </div>

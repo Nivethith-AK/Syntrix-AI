@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { safeNextPath } from "@/lib/safe-next";
 import { createClient } from "@/lib/supabase/server";
 
 function profileFromMetadata(meta: Record<string, unknown> | undefined) {
@@ -19,8 +20,7 @@ function profileFromMetadata(meta: Record<string, unknown> | undefined) {
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const nextRaw = searchParams.get("next") ?? "/app";
-  const next = nextRaw.startsWith("/") ? nextRaw : "/app";
+  const next = safeNextPath(searchParams.get("next"), "/app");
   const verified = searchParams.get("verified");
   const errorDescription = searchParams.get("error_description") || searchParams.get("error");
 

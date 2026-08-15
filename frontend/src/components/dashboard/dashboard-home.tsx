@@ -19,7 +19,12 @@ export function DashboardHome({
 }) {
   switch (activeSection) {
     case "overview":
-      return <OverviewSection onNavigateProjects={() => onNavigate?.("projects")} />;
+      return (
+        <OverviewSection
+          onNavigateProjects={() => onNavigate?.("projects")}
+          onNavigate={onNavigate}
+        />
+      );
     case "projects":
       return <ProjectsSection />;
     case "datasets":
@@ -35,6 +40,11 @@ export function DashboardHome({
     case "settings":
       return <SettingsSection />;
     default:
-      return <OverviewSection onNavigateProjects={() => onNavigate?.("projects")} />;
+      return (
+        <OverviewSection
+          onNavigateProjects={() => onNavigate?.("projects")}
+          onNavigate={onNavigate}
+        />
+      );
   }
 }

@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
@@ -17,9 +18,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
+import type { WorkspaceHubTab } from "@/lib/safe-next";
 import type { DatasetVersion, Job } from "@/types/api";
 
-type Tab = "data" | "experiments" | "agents" | "reports" | "chat";
+type Tab = WorkspaceHubTab;
+
+const VALID_TABS: Tab[] = ["data", "experiments", "agents", "reports", "chat"];
+
+function parseTab(value: string | null): Tab {
+  if (value && (VALID_TABS as string[]).includes(value)) return value as Tab;
+  return "data";
+}
 
 export function WorkspaceHub({
   projectId,
@@ -29,7 +38,25 @@ export function WorkspaceHub({
   workspaceId: string;
 }) {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<Tab>("data");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [tab, setTabState] = useState<Tab>(() => parseTab(searchParams.get("tab")));
+
+  function setTab(next: Tab) {
+    setTabState(next);
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === "data") params.delete("tab");
+    else params.set("tab", next);
+    const qs = params.toString();
+    router.replace(
+      `/app/projects/${projectId}/workspaces/${workspaceId}${qs ? `?${qs}` : ""}`,
+      { scroll: false },
+    );
+  }
+
+  useEffect(() => {
+    setTabState(parseTab(searchParams.get("tab")));
+  }, [searchParams]);
   const [error, setError] = useState<string | null>(null);
   const [job, setJob] = useState<Job | null>(null);
   const [pollId, setPollId] = useState<string | null>(null);
