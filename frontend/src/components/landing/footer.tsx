@@ -119,12 +119,12 @@ export function Footer() {
                   </a>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="/sign-up"
                     className="text-sm text-[var(--color-baltic-sea-500)] hover:text-[var(--color-keppel-400)] transition-colors"
                   >
                     Get started
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
