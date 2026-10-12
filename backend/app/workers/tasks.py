@@ -764,12 +764,11 @@ def generate_report_task(self, job_id: str) -> dict:
             raise
 
 
-@celery_app.task(name="app.workers.tasks.run_workflow_task", bind=True, queue="default")
-def run_workflow_task(self, job_id: str) -> dict:
-    """Execute LangGraph supervisor workflow and persist agent activities."""
+def execute_workflow_sync(job_id: str) -> dict:
+    """Execute LangGraph multi-agent workflow and broadcast observable execution traces (CS-34 SDGP)."""
+    from app.core.events import event_broadcaster
     from syntrix_ai.graphs.workflow import build_workflow_graph, get_postgres_checkpointer
     from syntrix_ml.eda import build_eda_insights
-    from syntrix_ml.pipeline import train_experiment as _train
     from syntrix_ml.profile import profile_dataframe
     from syntrix_ml.reporting import build_markdown_report
 
@@ -785,8 +784,9 @@ def run_workflow_task(self, job_id: str) -> dict:
                 raise ValueError("Job not found")
             payload = job["input_json"] or {}
             run_id = str(payload.get("agent_run_id") or "")
-            workflow_type = str(payload.get("workflow_type") or "eda")
+            workflow_type = str(payload.get("workflow_type") or "data_intelligence")
             version_id = payload.get("dataset_version_id")
+            objective = str(payload.get("objective") or payload.get("message") or "Autonomous Data Analysis")
             human = payload.get("human_response") or {}
 
             run = session.execute(
@@ -807,8 +807,31 @@ def run_workflow_task(self, job_id: str) -> dict:
             )
             session.commit()
 
+            # Broadcast workflow started event
+            event_broadcaster.publish_sync(
+                run_id,
+                "workflow_started",
+                step="init",
+                progress_pct=5,
+                payload={"workflow_type": workflow_type, "objective": objective},
+            )
+            event_broadcaster.publish_sync(
+                job_id,
+                "workflow_started",
+                step="init",
+                progress_pct=5,
+                payload={"workflow_type": workflow_type, "objective": objective},
+            )
+
+            cached_frames: dict[str, Any] = {}
+
+            def load_df(vid: str):
+                if vid not in cached_frames:
+                    cached_frames[vid] = _load_version_frame(session, vid)
+                return cached_frames[vid]
+
             def profile_dataset(vid: str) -> dict:
-                df = _load_version_frame(session, vid)
+                df = load_df(vid)
                 profile = profile_dataframe(df)
                 eda = build_eda_insights(df, profile=profile)
                 _upsert_metadata(session, version_id=vid, profile=profile, eda=eda)
@@ -823,74 +846,51 @@ def run_workflow_task(self, job_id: str) -> dict:
             def build_eda(vid: str) -> dict:
                 return profile_dataset(vid).get("eda") or {}
 
-            def train(vid: str, target_column=None, task_type="classification"):
-                df = _load_version_frame(session, vid)
-                result = _train(
-                    df,
-                    task_type=task_type or "classification",
-                    target_column=target_column,
-                    algorithms=["random_forest", "logistic_regression"],
-                    mlflow_tracking_uri=None,
-                )
-                return {
-                    "best_algorithm": result.best_algorithm,
-                    "best_score": result.best_score,
-                    "task_type": result.task_type,
-                    "target_column": target_column,
-                    "models": [
-                        {"algorithm": m.algorithm, "metrics": m.metrics} for m in result.models
-                    ],
-                }
-
-            def explain(state: dict) -> dict:
-                return {
-                    "method": "deferred",
-                    "message": "Use /models/{id}/explain for full SHAP",
-                }
-
             def report(state: dict) -> str:
                 return build_markdown_report(
-                    title="Agent workflow report",
-                    semantic_summary=((state.get("eda") or {}).get("semantic_summary")),
-                    eda=(state.get("eda") or {}).get("eda") or state.get("eda"),
-                    experiment=state.get("experiment"),
-                    explanations=state.get("explanation"),
+                    title=f"Report: {objective}",
+                    objective=objective,
+                    quality_report=state.get("quality_report"),
+                    cleaning_summary=state.get("cleaning_summary"),
+                    eda=state.get("eda"),
                 )
 
             tools = {
+                "load_dataframe": load_df,
+                "get_dataframe": load_df,
                 "profile_dataset": profile_dataset,
                 "build_eda": build_eda,
-                "train": train,
-                "explain": explain,
                 "report": report,
             }
+
             checkpointer = get_postgres_checkpointer(settings.database_url)
             graph = build_workflow_graph(tools, checkpointer=checkpointer)
+
             initial = {
                 "workspace_id": str(job["workspace_id"]),
                 "project_id": str(job["project_id"]),
                 "user_id": str(job["user_id"]),
+                "objective": objective,
                 "workflow_type": workflow_type,
                 "dataset_version_id": str(version_id) if version_id else None,
-                "target_column": human.get("target_column") or payload.get("target_column"),
-                "task_type": human.get("task_type")
-                or payload.get("task_type")
-                or "classification",
                 "human_response": human or None,
                 "messages": [],
                 "activities": [],
+                "step_retries": {},
             }
             config = {
                 "configurable": {"thread_id": run.get("checkpoint_thread_id") or run_id}
             }
-            _update_job(session, jid, progress_pct=30)
+
+            _update_job(session, jid, progress_pct=25)
             final = graph.invoke(initial, config=config)
 
+            # Persist and broadcast activities
             for act in final.get("activities") or []:
                 status = (
                     "waiting_human"
                     if act.get("activity_type") == "await_human"
-                    else "succeeded"
+                    else act.get("status") or "succeeded"
                 )
                 _insert_activity(
                     session,
@@ -903,6 +903,26 @@ def run_workflow_task(self, job_id: str) -> dict:
                     activity_type=act.get("activity_type") or "step",
                     status=status,
                     payload=act.get("payload_json") or {},
+                )
+                # Broadcast live activity to WebSocket and SSE subscribers
+                event_broadcaster.publish_sync(
+                    run_id,
+                    "agent_activity",
+                    agent_name=act.get("agent_name"),
+                    step=act.get("activity_type"),
+                    status=status,
+                    payload=act.get("payload_json") or {},
+                )
+
+            # Broadcast Quality Gate evaluated event if available
+            if final.get("quality_report"):
+                event_broadcaster.publish_sync(
+                    run_id,
+                    "quality_gate_evaluated",
+                    agent_name="quality_validation_agent",
+                    step="quality_gate",
+                    status="passed" if final.get("quality_gate_passed") else "flagged",
+                    payload=final["quality_report"],
                 )
 
             run_status = "waiting_human" if final.get("waiting_human") else "succeeded"
@@ -926,6 +946,7 @@ def run_workflow_task(self, job_id: str) -> dict:
                 },
             )
             session.commit()
+
             out = {
                 "agent_run_id": run_id,
                 "status": run_status,
@@ -934,6 +955,25 @@ def run_workflow_task(self, job_id: str) -> dict:
             _update_job(
                 session, jid, status="succeeded", progress_pct=100, result_json=json.dumps(out)
             )
+
+            # Broadcast workflow completion
+            event_broadcaster.publish_sync(
+                run_id,
+                "workflow_completed",
+                step="complete",
+                status=run_status,
+                progress_pct=100,
+                payload={"result": final.get("result")},
+            )
+            event_broadcaster.publish_sync(
+                job_id,
+                "workflow_completed",
+                step="complete",
+                status="succeeded",
+                progress_pct=100,
+                payload=out,
+            )
+
             return out
         except Exception as exc:  # noqa: BLE001
             if run_id:
@@ -946,5 +986,28 @@ def run_workflow_task(self, job_id: str) -> dict:
                     {"id": run_id, "err": str(exc)},
                 )
                 session.commit()
+                event_broadcaster.publish_sync(
+                    run_id,
+                    "workflow_failed",
+                    step="error",
+                    status="failed",
+                    progress_pct=100,
+                    payload={"error": str(exc)},
+                )
             _update_job(session, jid, status="failed", progress_pct=100, error_message=str(exc))
+            event_broadcaster.publish_sync(
+                job_id,
+                "workflow_failed",
+                step="error",
+                status="failed",
+                progress_pct=100,
+                payload={"error": str(exc)},
+            )
             raise
+
+
+@celery_app.task(name="app.workers.tasks.run_workflow_task", bind=True, queue="default")
+def run_workflow_task(self, job_id: str) -> dict:
+    """Celery task entrypoint delegating to execute_workflow_sync."""
+    return execute_workflow_sync(job_id)
+

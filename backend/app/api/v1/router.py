@@ -13,6 +13,7 @@ from app.api.v1 import (
     reports,
     workflows,
     workspaces,
+    ws,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -26,3 +27,4 @@ api_router.include_router(workflows.router)
 api_router.include_router(reports.router)
 api_router.include_router(conversations.router)
 api_router.include_router(jobs.router)
+api_router.include_router(ws.router)

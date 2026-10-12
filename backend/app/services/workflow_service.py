@@ -38,7 +38,7 @@ class WorkflowService:
         if ws is None:
             raise NotFoundError("Workspace not found")
         wf = workflow_type.lower()
-        if wf not in {"eda", "automl", "explain", "report", "chat", "custom"}:
+        if wf not in {"data_intelligence", "eda", "automl", "explain", "report", "chat", "custom"}:
             raise ValidationDomainError(f"Unsupported workflow_type: {workflow_type}")
 
         run = AgentRunRow(
@@ -67,11 +67,19 @@ class WorkflowService:
         run.job_id = job.id
         await self._session.commit()
 
-        from app.workers.tasks import run_workflow_task
+        # Resilient dispatch: try Celery first; fallback to background thread when Redis is offline
+        try:
+            from app.workers.tasks import run_workflow_task
 
-        async_result = run_workflow_task.delay(str(job.id))
-        await self._jobs.set_celery_task_id(job.id, async_result.id)
-        await self._session.commit()
+            async_result = run_workflow_task.delay(str(job.id))
+            await self._jobs.set_celery_task_id(job.id, async_result.id)
+            await self._session.commit()
+        except Exception:
+            import asyncio
+            from app.workers.tasks import execute_workflow_sync
+
+            asyncio.create_task(asyncio.to_thread(execute_workflow_sync, str(job.id)))
+
         job = await self._jobs.get(job.id, user_id)
         await self._session.refresh(run)
         return run, job
@@ -101,11 +109,19 @@ class WorkflowService:
         run.status = "queued"
         run.job_id = job.id
         await self._session.commit()
-        from app.workers.tasks import run_workflow_task
 
-        async_result = run_workflow_task.delay(str(job.id))
-        await self._jobs.set_celery_task_id(job.id, async_result.id)
-        await self._session.commit()
+        try:
+            from app.workers.tasks import run_workflow_task
+
+            async_result = run_workflow_task.delay(str(job.id))
+            await self._jobs.set_celery_task_id(job.id, async_result.id)
+            await self._session.commit()
+        except Exception:
+            import asyncio
+            from app.workers.tasks import execute_workflow_sync
+
+            asyncio.create_task(asyncio.to_thread(execute_workflow_sync, str(job.id)))
+
         await self._session.refresh(run)
         return run
 

@@ -19,8 +19,9 @@ router = APIRouter(tags=["workflows"])
 
 
 class WorkflowStart(BaseModel):
-    workflow_type: str
+    workflow_type: str = "data_intelligence"
     dataset_version_id: UUID | None = None
+    objective: str | None = None
     input: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -30,6 +31,7 @@ class WorkflowAccepted(BaseModel):
     workspace_id: UUID
     status: str
     events_url: str
+    ws_url: str
 
 
 class AgentRunOut(BaseModel):
@@ -81,19 +83,24 @@ def _svc(session: DbSession) -> WorkflowService:
 async def start_workflow(
     workspace_id: UUID, body: WorkflowStart, user: CurrentUser, session: DbSession
 ) -> WorkflowAccepted:
+    combined_input = dict(body.input)
+    if body.objective:
+        combined_input["objective"] = body.objective
+
     run, job = await _svc(session).start(
         workspace_id,
         user.id,
         workflow_type=body.workflow_type,
         dataset_version_id=body.dataset_version_id,
-        input_data=body.input,
+        input_data=combined_input,
     )
     return WorkflowAccepted(
         run_id=run.id,
         job_id=job.id,
         workspace_id=workspace_id,
         status=job.status,
-        events_url=f"/api/v1/jobs/{job.id}/events",
+        events_url=f"/api/v1/workflows/{run.id}/events",
+        ws_url=f"/api/v1/ws/workflows/{run.id}",
     )
 
 

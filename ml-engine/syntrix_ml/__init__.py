@@ -7,6 +7,7 @@ from syntrix_ml.pipeline import predict_with_artifact, train_experiment
 from syntrix_ml.profile import profile_dataframe
 from syntrix_ml.reporting import build_markdown_report, markdown_to_pdf
 from syntrix_ml.validate import ValidationResult, validate_dataframe
+from syntrix_ml.visualization import build_visualization_specs, generate_chart_images
 
 __version__ = "0.3.0"
 
@@ -14,7 +15,9 @@ __all__ = [
     "ValidationResult",
     "build_eda_insights",
     "build_markdown_report",
+    "build_visualization_specs",
     "explain_model",
+    "generate_chart_images",
     "load_tabular",
     "markdown_to_pdf",
     "predict_with_artifact",
