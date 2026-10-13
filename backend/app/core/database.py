@@ -38,7 +38,18 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         try:
             yield session
-            await session.commit()
+            try:
+                if session.is_active:
+                    await session.commit()
+            except Exception:
+                try:
+                    await session.rollback()
+                except Exception:
+                    pass
         except Exception:
-            await session.rollback()
+            try:
+                if session.is_active:
+                    await session.rollback()
+            except Exception:
+                pass
             raise

@@ -88,11 +88,11 @@ class ReportService:
             },
         )
         report.job_id = job.id
-        await self._session.commit()
+        from app.workers.dispatcher import dispatch_task
         from app.workers.tasks import generate_report_task
 
-        async_result = generate_report_task.delay(str(job.id))
-        await self._jobs.set_celery_task_id(job.id, async_result.id)
+        task_id = dispatch_task(generate_report_task, str(job.id))
+        await self._jobs.set_celery_task_id(job.id, task_id)
         await self._session.commit()
         job = await self._jobs.get(job.id, user_id)
         await self._session.refresh(report)

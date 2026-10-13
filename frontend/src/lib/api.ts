@@ -1,217 +1,121 @@
-import { getPublicEnv } from "@/lib/env";
-import { createClient } from "@/lib/supabase/client";
-import type {
-  AgentActivity,
-  AgentRun,
-  ChatMessage,
-  Conversation,
-  Dataset,
-  DatasetMetadata,
-  DatasetPreview,
-  DatasetVersion,
-  Experiment,
-  Job,
-  Model,
-  Paginated,
-  Project,
-  Report,
-  User,
-  Workspace,
-} from "@/types/api";
+/**
+ * Syntrix AI — Frontend API Client
+ * Connects UI and homescreen dashboard to the FastAPI backend.
+ */
 
-async function getToken(): Promise<string> {
-  const supabase = createClient();
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (!token) throw new Error("Not authenticated");
-  return token;
+const API_BASE_URL =
+  (typeof window !== "undefined" && (window as any).__SYNTRIX_API_URL__) ||
+  (import.meta as any).env?.VITE_API_URL ||
+  "http://localhost:8000/api/v1";
+
+export interface DemoBootstrapData {
+  user_id: string;
+  project_id: string;
+  workspace_id: string;
+  dataset_version: {
+    id: string | null;
+    status: string;
+    version_number: number;
+  } | null;
+  metadata: {
+    row_count: number;
+    column_count: number;
+    semantic_summary: string;
+    quality: Record<string, any>;
+    eda: Record<string, any>;
+    target_candidates: Array<{ column: string; task_type: string; score: number }>;
+  } | null;
+  model_count: number;
+  models: Array<{
+    id: string;
+    name: string;
+    algorithm: string;
+    task_type: string;
+    metrics: Record<string, any>;
+    is_champion: boolean;
+    status: string;
+  }>;
 }
 
-async function authHeaders(json = true): Promise<HeadersInit> {
-  const token = await getToken();
-  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
-  if (json) headers["Content-Type"] = "application/json";
-  return headers;
-}
-
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const { apiUrl } = getPublicEnv();
-  const json = !(init?.body instanceof FormData);
-  const headers = await authHeaders(json);
-  const response = await fetch(`${apiUrl}${path}`, {
-    ...init,
-    headers: { ...headers, ...(init?.headers ?? {}) },
-  });
-
-  if (!response.ok) {
-    let detail = response.statusText;
-    try {
-      const body = (await response.json()) as { detail?: string; title?: string };
-      detail = body.detail || body.title || detail;
-    } catch {
-      // ignore
-    }
-    throw new Error(detail);
-  }
-  if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
+export interface JobStatus {
+  id: string;
+  status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+  progress_pct: number;
+  result_json: Record<string, any>;
+  error_message: string | null;
 }
 
 export const api = {
-  me: () => apiFetch<User>("/api/v1/me"),
-  meStats: () =>
-    apiFetch<{
-      projects: number;
-      workspaces: number;
-      datasets: number;
-      dataset_versions: number;
-      experiments: number;
-      models: number;
-      agent_runs: number;
-      reports: number;
-    }>("/api/v1/me/stats"),
-  updateMe: (body: {
-    display_name?: string | null;
-    avatar_url?: string | null;
-    preferences?: Record<string, unknown>;
-  }) => apiFetch<User>("/api/v1/me", { method: "PATCH", body: JSON.stringify(body) }),
-  listProjects: () => apiFetch<Paginated<Project>>("/api/v1/projects"),
-  createProject: (body: { name: string; description?: string }) =>
-    apiFetch<Project>("/api/v1/projects", { method: "POST", body: JSON.stringify(body) }),
-  getProject: (id: string) => apiFetch<Project>(`/api/v1/projects/${id}`),
-  listWorkspaces: (projectId: string) =>
-    apiFetch<Paginated<Workspace>>(`/api/v1/projects/${projectId}/workspaces`),
-  createWorkspace: (projectId: string, body: { name: string; description?: string }) =>
-    apiFetch<Workspace>(`/api/v1/projects/${projectId}/workspaces`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
-  getWorkspace: (id: string) => apiFetch<Workspace>(`/api/v1/workspaces/${id}`),
+  baseUrl: API_BASE_URL,
 
-  submitDemoJob: (body: { project_id: string; workspace_id?: string; message?: string }) =>
-    apiFetch<{ job_id: string; status: string; events_url: string }>("/api/v1/jobs/demo", {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
-  getJob: (jobId: string) => apiFetch<Job>(`/api/v1/jobs/${jobId}`),
-
-  uploadDataset: async (workspaceId: string, file: File, name?: string) => {
-    const form = new FormData();
-    form.append("file", file);
-    if (name) form.append("name", name);
-    return apiFetch<{
-      dataset: Dataset;
-      dataset_version: DatasetVersion;
-      job_id: string;
-      status: string;
-      events_url: string;
-    }>(`/api/v1/workspaces/${workspaceId}/datasets/upload`, { method: "POST", body: form });
+  async getHealth(): Promise<{ status: string; service: string }> {
+    const res = await fetch(`${API_BASE_URL}/health`);
+    if (!res.ok) throw new Error("Backend offline");
+    return res.json();
   },
-  listDatasetVersions: (workspaceId: string) =>
-    apiFetch<Paginated<DatasetVersion>>(`/api/v1/workspaces/${workspaceId}/dataset-versions`),
-  getDatasetVersion: (versionId: string) =>
-    apiFetch<DatasetVersion>(`/api/v1/dataset-versions/${versionId}`),
-  getDatasetMetadata: (versionId: string) =>
-    apiFetch<DatasetMetadata>(`/api/v1/dataset-versions/${versionId}/metadata`),
-  getDatasetPreview: (versionId: string, limit = 50) =>
-    apiFetch<DatasetPreview>(`/api/v1/dataset-versions/${versionId}/preview?limit=${limit}`),
-  getEda: (versionId: string) =>
-    apiFetch<{
-      dataset_version_id: string;
-      eda: Record<string, unknown>;
-      semantic_summary: string | null;
-      quality: Record<string, unknown>;
-      target_candidates: Array<Record<string, unknown>>;
-    }>(`/api/v1/dataset-versions/${versionId}/eda`),
-  startEda: (versionId: string) =>
-    apiFetch<{ dataset_version_id: string; job_id: string; status: string }>(
-      `/api/v1/dataset-versions/${versionId}/eda`,
-      { method: "POST" },
-    ),
 
-  listExperiments: (workspaceId: string) =>
-    apiFetch<Paginated<Experiment>>(`/api/v1/workspaces/${workspaceId}/experiments`),
-  createExperiment: (
-    workspaceId: string,
-    body: {
-      dataset_version_id: string;
-      name: string;
-      task_type: string;
-      target_column?: string | null;
-      algorithms?: string[];
-    },
-  ) =>
-    apiFetch<{ experiment: Experiment; job_id: string; status: string }>(
-      `/api/v1/workspaces/${workspaceId}/experiments`,
-      { method: "POST", body: JSON.stringify(body) },
-    ),
-  getExperiment: (id: string) => apiFetch<Experiment>(`/api/v1/experiments/${id}`),
-  listModels: (workspaceId: string) =>
-    apiFetch<Paginated<Model>>(`/api/v1/workspaces/${workspaceId}/models`),
-  setChampion: (modelId: string) =>
-    apiFetch<Model>(`/api/v1/models/${modelId}/champion`, { method: "POST" }),
-  predict: (modelId: string, rows: Array<Record<string, unknown>>) =>
-    apiFetch<{ prediction_id: string; output_json: Record<string, unknown> }>(
-      `/api/v1/models/${modelId}/predictions`,
-      { method: "POST", body: JSON.stringify({ rows }) },
-    ),
-  explainModel: (modelId: string) =>
-    apiFetch<{ job_id: string; status: string }>(`/api/v1/models/${modelId}/explain`, {
-      method: "POST",
-    }),
-  getExplanations: (modelId: string) =>
-    apiFetch<{ explanations: Record<string, unknown> }>(
-      `/api/v1/models/${modelId}/explanations`,
-    ),
+  async bootstrapDemo(): Promise<DemoBootstrapData> {
+    const res = await fetch(`${API_BASE_URL}/demo/bootstrap`);
+    if (!res.ok) throw new Error("Failed to bootstrap demo workspace");
+    return res.json();
+  },
 
-  startWorkflow: (
-    workspaceId: string,
-    body: { workflow_type: string; dataset_version_id?: string; input?: Record<string, unknown> },
-  ) =>
-    apiFetch<{ run_id: string; job_id: string; status: string; events_url: string }>(
-      `/api/v1/workspaces/${workspaceId}/workflows`,
-      { method: "POST", body: JSON.stringify(body) },
-    ),
-  getWorkflow: (runId: string) => apiFetch<AgentRun>(`/api/v1/workflows/${runId}`),
-  resumeWorkflow: (
-    runId: string,
-    body: { target_column?: string; task_type?: string; input?: Record<string, unknown> },
-  ) =>
-    apiFetch<AgentRun>(`/api/v1/workflows/${runId}/resume`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
-  listAgentRuns: (workspaceId: string) =>
-    apiFetch<Paginated<AgentRun>>(`/api/v1/workspaces/${workspaceId}/agent-runs`),
-  listAgentActivities: (workspaceId: string) =>
-    apiFetch<Paginated<AgentActivity>>(`/api/v1/workspaces/${workspaceId}/agent-activities`),
+  async uploadDemoDataset(file: File, name?: string): Promise<{ dataset_id: string; version_id: string; job_id: string; status: string }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (name) formData.append("name", name);
 
-  listReports: (workspaceId: string) =>
-    apiFetch<Paginated<Report>>(`/api/v1/workspaces/${workspaceId}/reports`),
-  createReport: (
-    workspaceId: string,
-    body: { title: string; report_type?: string; experiment_id?: string; model_id?: string },
-  ) =>
-    apiFetch<{ report: Report; job_id: string }>(`/api/v1/workspaces/${workspaceId}/reports`, {
+    const res = await fetch(`${API_BASE_URL}/demo/upload`, {
       method: "POST",
-      body: JSON.stringify(body),
-    }),
-  getReport: (id: string) => apiFetch<Report>(`/api/v1/reports/${id}`),
-  downloadReportUrl: (id: string, format: "md" | "pdf") =>
-    apiFetch<{ url: string }>(`/api/v1/reports/${id}/download?format=${format}`),
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Upload failed" }));
+      throw new Error(err.detail || "Upload failed");
+    }
+    return res.json();
+  },
 
-  listConversations: (workspaceId: string) =>
-    apiFetch<Paginated<Conversation>>(`/api/v1/workspaces/${workspaceId}/conversations`),
-  createConversation: (workspaceId: string, title?: string) =>
-    apiFetch<Conversation>(`/api/v1/workspaces/${workspaceId}/conversations`, {
+  async trainDemoAutoML(
+    datasetVersionId?: string,
+    targetColumn: string = "churned",
+    taskType: string = "classification",
+    algorithms?: string[]
+  ): Promise<{ experiment_id: string; job_id: string; status: string }> {
+    const res = await fetch(`${API_BASE_URL}/demo/train`, {
       method: "POST",
-      body: JSON.stringify({ title: title || "Workspace chat" }),
-    }),
-  getConversation: (id: string) =>
-    apiFetch<Conversation & { messages: ChatMessage[] }>(`/api/v1/conversations/${id}`),
-  sendMessage: (id: string, content: string) =>
-    apiFetch<{ user_message: ChatMessage; assistant_message: ChatMessage }>(
-      `/api/v1/conversations/${id}/messages`,
-      { method: "POST", body: JSON.stringify({ content }) },
-    ),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        dataset_version_id: datasetVersionId,
+        target_column: targetColumn,
+        task_type: taskType,
+        algorithms: algorithms || ["random_forest", "logistic_regression", "xgboost"],
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Training failed" }));
+      throw new Error(err.detail || "Training failed");
+    }
+    return res.json();
+  },
+
+  getDemoReportPdfUrl(): string {
+    return `${API_BASE_URL}/demo/report/pdf`;
+  },
+
+  async sendDemoChat(message: string): Promise<{ reply: string }> {
+    const res = await fetch(`${API_BASE_URL}/demo/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+    if (!res.ok) throw new Error("Chat service unavailable");
+    return res.json();
+  },
+
+  async getJob(jobId: string): Promise<JobStatus> {
+    const res = await fetch(`${API_BASE_URL}/jobs/${jobId}`);
+    if (!res.ok) throw new Error("Job not found");
+    return res.json();
+  },
 };

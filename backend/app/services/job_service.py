@@ -60,10 +60,11 @@ class JobService:
             await self._session.commit()
 
         # Import late to avoid circular import at module load
+        from app.workers.dispatcher import dispatch_task
         from app.workers.tasks import demo_hello_task
 
-        async_result = demo_hello_task.delay(str(job.id))
-        await self._jobs.set_celery_task_id(job.id, async_result.id)
+        task_id = dispatch_task(demo_hello_task, str(job.id))
+        await self._jobs.set_celery_task_id(job.id, task_id)
         if self._session is not None:
             await self._session.commit()
         refreshed = await self._jobs.get(job.id, user_id)

@@ -26,7 +26,7 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
 from sklearn.cluster import KMeans
 
 from syntrix_ml.validate import validate_dataframe
@@ -257,8 +257,11 @@ def train_experiment(
             if not target_column:
                 raise ValueError("target_column is required")
             X, y = _split_xy(cleaned, target_column)
+            classes_list: list[str] | None = None
             if task_type == "classification":
-                y = y.astype("string")
+                le = LabelEncoder()
+                y = pd.Series(le.fit_transform(y.astype("string")), index=y.index)
+                classes_list = [str(c) for c in le.classes_]
             preprocessor = _build_preprocessor(X)
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=test_size, random_state=42,
@@ -278,6 +281,7 @@ def train_experiment(
                     "algorithm": name,
                     "target_column": target_column,
                     "features": list(X.columns),
+                    "classes": classes_list,
                 }
                 artifact = _dump_artifact(pipe, meta)
                 results.append(
@@ -286,7 +290,7 @@ def train_experiment(
                         task_type=task_type,
                         metrics=metrics,
                         params={},
-                        feature_schema={"features": list(X.columns), "target": target_column},
+                        feature_schema={"features": list(X.columns), "target": target_column, "classes": classes_list},
                         artifact_bytes=artifact,
                     )
                 )
@@ -341,8 +345,18 @@ def predict_with_artifact(artifact_bytes: bytes, rows: list[dict[str, Any]]) -> 
     else:
         X = df
     preds = model.predict(X)
+    classes = meta.get("classes")
+    if classes and isinstance(classes, list):
+        try:
+            preds_labels = [classes[int(p)] if 0 <= int(p) < len(classes) else _jsonable(p) for p in preds]
+        except Exception:
+            preds_labels = [_jsonable(p) for p in preds]
+    else:
+        preds_labels = [_jsonable(p) for p in preds]
+
     out: dict[str, Any] = {
-        "predictions": [_jsonable(p) for p in preds],
+        "predictions": preds_labels,
+        "raw_predictions": [_jsonable(p) for p in preds],
         "task_type": meta.get("task_type"),
         "algorithm": meta.get("algorithm"),
     }

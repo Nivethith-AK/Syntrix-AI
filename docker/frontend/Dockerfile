@@ -1,26 +1,18 @@
-FROM node:22-alpine AS deps
+FROM node:22-alpine AS builder
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm ci
-
-FROM node:22-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY frontend .
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
-    NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG VITE_API_URL=http://localhost:8000/api/v1
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ENV VITE_API_URL=$VITE_API_URL \
+    VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
+    VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 RUN npm run build
 
-FROM node:22-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+FROM nginx:alpine AS runner
+COPY --from=builder /app/dist /usr/share/nginx/html
+RUN printf 'server {\n    listen 3000;\n    location / {\n        root /usr/share/nginx/html;\n        index index.html index.htm;\n        try_files $uri $uri/ /index.html;\n    }\n}\n' > /etc/nginx/conf.d/default.conf
 EXPOSE 3000
-ENV PORT=3000 HOSTNAME=0.0.0.0
-CMD ["node", "server.js"]
+CMD ["nginx", "-g", "daemon off;"]

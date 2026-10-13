@@ -112,10 +112,11 @@ class ExperimentService:
         exp.job_id = job.id
         await self._session.commit()
 
+        from app.workers.dispatcher import dispatch_task
         from app.workers.tasks import train_experiment_task
 
-        async_result = train_experiment_task.delay(str(job.id))
-        await self._jobs.set_celery_task_id(job.id, async_result.id)
+        task_id = dispatch_task(train_experiment_task, str(job.id))
+        await self._jobs.set_celery_task_id(job.id, task_id)
         await self._session.commit()
         job = await self._jobs.get(job.id, user_id)
         await self._session.refresh(exp)
@@ -205,10 +206,11 @@ class ExperimentService:
             input_json={"model_id": str(model.id)},
         )
         await self._session.commit()
+        from app.workers.dispatcher import dispatch_task
         from app.workers.tasks import explain_model_task
 
-        async_result = explain_model_task.delay(str(job.id))
-        await self._jobs.set_celery_task_id(job.id, async_result.id)
+        task_id = dispatch_task(explain_model_task, str(job.id))
+        await self._jobs.set_celery_task_id(job.id, task_id)
         await self._session.commit()
         return await self._jobs.get(job.id, user_id)
 
